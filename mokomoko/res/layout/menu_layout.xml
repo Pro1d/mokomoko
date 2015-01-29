@@ -18,7 +18,7 @@
 	        android:layout_width="wrap_content"
 	        android:layout_height="wrap_content"
 	        android:gravity="center_horizontal"
-	        android:text="Round Snake Multiplayer"
+	        android:text="Mokomoko"
 	        android:textColor="#fff"
 	        android:textSize="30dp"
 	        android:typeface="normal" />

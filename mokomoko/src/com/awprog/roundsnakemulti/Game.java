@@ -72,6 +72,7 @@ public class Game {
 
 	void initGame() {
 		map = new Map(nbPlayers, mapType, mapScale);
+		map.height = 50;
 		
 		players = new Player[nbPlayers];
 		for(int i = 0; i < nbPlayers; i++)

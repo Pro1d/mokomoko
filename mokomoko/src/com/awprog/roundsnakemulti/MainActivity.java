@@ -30,6 +30,7 @@ import com.awprog.roundsnakemulti.Game.Map;
 import com.awprog.roundsnakemulti.Game.Player;
 import com.fbessou.sofa.GameMessageReceiver;
 import com.fbessou.sofa.InputEvent;
+import com.fbessou.sofa.InputEvent.EventType;
 import com.fbessou.sofa.ProxyConnector;
 import com.fbessou.sofa.ProxyConnector.OnConnectedListener;
 import com.fbessou.sofa.StringReceiver;
@@ -38,6 +39,8 @@ public class MainActivity extends Activity {
 		MySurfaceView mySurfaceView;
 		SeekBar sbSpeed;
 		Game game = new Game();
+		GameMessageReceiver gameMsgReceiver = new GameMessageReceiver();
+		
 		/**
 		 * TODO :
 		 * �chelle adapt�e au nombre de joueurs
@@ -173,19 +176,18 @@ public class MainActivity extends Activity {
 				public void onConnected(Socket socket) {
 					StringReceiver sr = new StringReceiver(socket);
 					
-					GameMessageReceiver gmr = new GameMessageReceiver();
-					gmr.setInputEventListener(new GameMessageReceiver.InputEventListener() {
+					/*gameMsgReceiver.setInputEventListener(new GameMessageReceiver.InputEventListener() {
 						@Override
 						public void onInputEvent(InputEvent event) {
-							if(game != null && game.players != null)
+							if(game != null && game.players != null && event.padId < game.nbPlayers)
 							if(!game.pause) {
 								float dx = event.x;
 								float dy = -event.y;
-								game.players[0].setDir((float) Math.atan2(dy, dx));
+								game.players[event.padId].setDir((float) Math.atan2(dy, dx));
 							}
 						}
-					});
-					sr.setListener(gmr);
+					});*/
+					sr.setListener(gameMsgReceiver);
 					new Thread(sr).start();
 				}
 			});
@@ -305,6 +307,21 @@ public class MainActivity extends Activity {
 					
 					if(!game.isGameInit)
 						game.initGame();
+					
+					InputEvent event;
+					while((event = gameMsgReceiver.pollInputEvent()) != null) {
+						if(game != null && game.players != null && event.padId < game.nbPlayers) {
+							switch(event.eventType) {
+							case MOTION_2D:
+								float dx = event.x;
+								float dy = -event.y;
+								game.players[event.padId].setDir((float) Math.atan2(dy, dx));
+								break;
+							default:
+								break;
+							}
+						}
+					}
 					
 					// Game engine
 					if(!game.pause) {

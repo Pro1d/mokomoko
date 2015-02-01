@@ -7,36 +7,36 @@ public class Rules {
 	 * 	law of the strongest croissance : -> atteindre un taille 
 	 *  overgrowth "42" : longueur fixe pas de pomme ni de bonus
 	 */
+	static class Values {
+		String name; // Nom du mode de jeu
+		
+		/** Carte **/
+		 // nombre de pommes et d'items max présents en même temps sur la carte
+		float nbApplesPerPlayer, nbApples;// total = nbApples + nbPlayer*nbApplesPerPlayer
+		float nbBonusPerPlayer, nbBonus;// total = nbItems + nbPlayer*nbItemsPerPlayer
+		//float mapScale; // Echelle de la carte
 	
-	String name; // Nom du mode de jeu
-	
-	/** Carte **/
-	 // nombre de pommes et d'items max présents en même temps sur la carte
-	float nbApplesPerPlayer, nbApples;// total = nbApples + nbPlayer*nbApplesPerPlayer
-	float nbBonusPerPlayer, nbBonus;// total = nbItems + nbPlayer*nbItemsPerPlayer
-	//float mapScale; // Echelle de la carte
-
-	/** Bonus **/
-	float bonusDurationMultiplicator; // multiplicateur de la durée des bonus
-	int appleGrowth; // longueur gagnée avec un pomme
-	
-	/** Vie/mort **/
-	int delayRevive; // temps avant revive; -1 pas de revive et fin du round si moins de 2 joueurs vivants
-	
-	/** Snake **/
-	int initialLength; // longueur initiale des serpents
-	float growthWithLengthFactor; // Taille des snakes en fonction de sa longueur
-	float maxAngleTurn; // Angle de variation maximum du snake pour les déplacements (minimise la courbure des virages)
-	
-	/** Score **/
-	int scoreKiller, scoreTarget, scoreOther, scoreSuicide; // score obtenu par chacun à chaque kill
-	int scoreLimit; // Score à atteindre pour gagner
-	float killScoreFactor, lengthScoreFactor; // score joueur = scoreKill*killScoreFactor + snake.length*lengthScoreFactor
-	
+		/** Bonus **/
+		float bonusDurationMultiplicator; // multiplicateur de la durée des bonus
+		int appleGrowth; // longueur gagnée avec un pomme
+		
+		/** Vie/mort **/
+		int delayRevive; // temps avant revive; -1 pas de revive et fin du round si moins de 2 joueurs vivants
+		
+		/** Snake **/
+		int initialLength; // longueur initiale des serpents
+		float growthWithLengthFactor; // Taille des snakes en fonction de sa longueur
+		float maxAngleTurn; // Angle de variation maximum du snake pour les déplacements (minimise la courbure des virages)
+		
+		/** Score **/
+		int scoreKiller, scoreTarget, scoreOther, scoreSuicide; // score obtenu par chacun à chaque kill
+		int scoreLimit; // Score à atteindre pour gagner
+		float killScoreFactor, lengthScoreFactor; // score joueur = scoreKill*killScoreFactor + snake.length*lengthScoreFactor
+	}
 	
 	
 	public static final int RULES_DM = 0, RULES_OG = 1, RULES_LR = 2, RULES_CS = 3;
-	private static final Rules[] gameMode = {
+	private static final Values[] gameMode = {
 		createRules(RULES_DM),
 		createRules(RULES_OG),
 		createRules(RULES_LR),
@@ -44,7 +44,7 @@ public class Rules {
 	};
 	
 	private static int currentRules = RULES_DM;
-	public static Rules current = gameMode[currentRules];
+	public static Values current = gameMode[currentRules];
 	
 	public static void setRulesType(int type) {
 		currentRules = type;
@@ -55,8 +55,8 @@ public class Rules {
 	}*/
 	
 	/** Création des modes de jeu **/
-	private static Rules createRules(int mode) {
-		Rules r = new Rules();
+	private static Values createRules(int mode) {
+		Values r = new Values();
 		
 		r.nbApples = 1;
 		r.nbApplesPerPlayer = 0.7f;
@@ -102,14 +102,15 @@ public class Rules {
 			r.lengthScoreFactor = 1;
 			break;
 		case RULES_CS:
-			r.name = "Collective Suicide";
+			r.name = "Suicide";
 			r.initialLength = 2;
 			r.scoreKiller = 0;
 			r.scoreOther = 0;
 			r.scoreSuicide = 1;
 			r.delayRevive = 3;
 			r.scoreLimit = 7; // <=> nombre de suicides à faire
-			r.maxAngleTurn = 50;
+			//r.maxAngleTurn = 50;
+			r.appleGrowth = 1;
 			break;
 		}
 		

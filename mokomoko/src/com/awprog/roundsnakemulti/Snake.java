@@ -35,6 +35,10 @@ public class Snake {
 	public int getLength() {
 		return length;
 	}
+	/** Retourne la longueur réelle (pas celle visible) **/
+	public int getVisibleLength() {
+		return parts.size();
+	}
 	/** Modifie la longueur réelle **/
 	public void setLength(int len) {
 		length = len;

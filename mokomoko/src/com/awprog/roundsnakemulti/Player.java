@@ -48,7 +48,7 @@ public class Player {
 	
 	public Player(int num) {
 		color = colors[num % nbColor];
-		name = colorsName[num%nbColor] + (num/nbColor > 1 ? " "+(num/nbColor) : "");
+		name = colorsName[num%nbColor] + (num/nbColor >= 1 ? " "+(1+num/nbColor) : "");
 		number = num;
 	}
 	
@@ -67,7 +67,7 @@ public class Player {
 
 	/** Score du joueur en prennant en compte les règles du jeu **/
 	public int getScore() {
-		return (int) (Rules.current.killScoreFactor * killScore + Rules.current.lengthScoreFactor * snk.getLength());
+		return (int) (Rules.current.killScoreFactor * killScore + Rules.current.lengthScoreFactor * snk.getVisibleLength());
 	}
 	/** Ajoute des kills au compteur de kill de ce joueur **/
 	public void addKillScore(int score) {
@@ -270,7 +270,7 @@ public class Player {
 	/** Ramasse et applique les effets de l'item **/
 	public void collect(Item item, int frameCount) {
 		if(item.effects.manualActivation) {
-			if(hasEquippedItem())
+			if(!hasEquippedItem())
 				equippedItem = item.effects;
 		}
 		else {

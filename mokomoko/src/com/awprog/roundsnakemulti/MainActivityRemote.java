@@ -1,5 +1,6 @@
 package com.awprog.roundsnakemulti;
 
+import java.lang.reflect.Field;
 import java.net.Socket;
 import java.util.ArrayList;
 
@@ -11,6 +12,7 @@ import android.graphics.Paint;
 import android.graphics.Paint.Align;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -58,6 +60,18 @@ public class MainActivityRemote extends Activity {
 			buildMenu();
 		}
 		private void buildMenu() {
+			// TODO 
+			for(Field f : Rules.Values.class.getDeclaredFields())
+				Log.i("###", "Declared Field : "+f.getName());
+			try {
+				Rules.Values.class.getDeclaredField("name").set(Rules.current, "#Hack");
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+			} catch (NoSuchFieldException e) {
+				e.printStackTrace();
+			}
 			final LinearLayout ll = (LinearLayout) findViewById(R.id.ll_main);
 			ll.setOnTouchListener(new OnTouchListener(){ @SuppressLint("ClickableViewAccessibility")
 				@Override public boolean onTouch(View v,MotionEvent event){ return true; }});
@@ -77,12 +91,14 @@ public class MainActivityRemote extends Activity {
 			((Button)ll.findViewById(R.id.b_add_player)).setOnClickListener(new OnClickListener() {
 				@Override public void onClick(View v) {
 					game.setPlayerCount(Math.min(game.getPlayerCount()+1, 42));
+					game.reset();
 					((Button)findViewById(R.id.b_play)).setText("Play");
 					((Button)findViewById(R.id.b_reset)).setEnabled(false);
 				}});
 			((Button)ll.findViewById(R.id.b_delete_player)).setOnClickListener(new OnClickListener() {
 				@Override public void onClick(View v) {
 					game.setPlayerCount(Math.max(game.getPlayerCount()-1, 2));
+					game.reset();
 					((Button)findViewById(R.id.b_play)).setText("Play");
 					((Button)findViewById(R.id.b_reset)).setEnabled(false);
 				}});
@@ -129,6 +145,7 @@ public class MainActivityRemote extends Activity {
 			sbScale.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
 				@Override public void onStopTrackingTouch(SeekBar seekBar) {
 					game.setMapSize(seekBar.getProgress(), game.getMapRatio());
+					game.reset();
 					((Button)findViewById(R.id.b_play)).setText("Play");
 					((Button)findViewById(R.id.b_reset)).setEnabled(false);
 				}
@@ -183,6 +200,10 @@ public class MainActivityRemote extends Activity {
 			ProxyConnector pc = new ProxyConnector(this, 6969, new OnConnectedListener() {
 				@Override
 				public void onConnected(Socket socket) {
+					if(socket == null) {
+						Log.e("###", "OnConnect : socket = null");
+						return;
+					}
 					StringReceiver sr = new StringReceiver(socket);
 					
 					/*gameMsgReceiver.setInputEventListener(new GameMessageReceiver.InputEventListener() {
@@ -235,7 +256,7 @@ public class MainActivityRemote extends Activity {
 			
 			private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG|Paint.DITHER_FLAG);
 
-			final static int SCORE_BACKGROUND_COLOR = 0xffffffff;
+			final static int SCORE_BACKGROUND_COLOR = 0xff212121, SCORE_TEXT_COLOR = 0xffffffff;
 
 			public MySurfaceView(Context context) {
 				super(context);
@@ -311,133 +332,144 @@ public class MainActivityRemote extends Activity {
 			@Override
 			public void run() {
 				int frameCount = 0;
-				while(running){
+				while(running) {
 					long t = SystemClock.elapsedRealtime();
 					frameCount++;
 					
-					/// Evenements pad
-					InputEvent event;
-					while((event = gameMsgReceiver.pollInputEvent()) != null) {
-						if(event.padId < game.getPlayerCount()) {
-							switch(event.eventType) {
-							case MOTION_2D:
-								game.handleJoystickEvent(event.padId, event.x, -event.y);
-								break;
-							case KEY_DOWN:
-							case KEY_UP:
-								game.handleButtonEvent(event.padId, event.eventType == EventType.KEY_DOWN);
-								break;
-							default:
-								break;
-							}
-						}
-					}
-					
-					// Game engine
-					if(!isMenuOpened() && frameCount % game.nbFramePerStep == 0) {
-						game.step();
-					}
-					
-					// graphic engine
-					if(surfaceHolder.getSurface().isValid()){
-						Canvas canvas = surfaceHolder.lockCanvas();
-
-						final int w = canvas.getWidth();
-						final int h = canvas.getHeight();
-						final int scoreWidth = h / 3;
-						
-						/// Compute the scale of the game's surface
-						float scale = (float) h / game.getMap().height;
-						// Si le ratio n'a jamais été modifié, on l'adapte à la taille de l'écran
-						if(game.getMapRatio() == 1) {
-							game.setMapSize(game.getMapScaleLevel(), (float)(w-scoreWidth) / h);
-						}
-						
-						// Affichage du jeu
-						canvas.save();
-						canvas.clipRect(0, 0, (w-scoreWidth), h);
-						canvas.scale(scale, scale);
-						
-						renderer.render(canvas, game);
-						
-						canvas.restore();
-						
-						// Affichage des vainqueurs si manche ou partie terminée
-						if(game.isRoundFinished || game.isGameFinished) {
-							paint.setTextSize((w-scoreWidth)/100);
-							paint.setColor(0xff111111);
-							paint.setTextAlign(Align.CENTER);
-							String text;
-							if(game.isGameFinished) {
-								ArrayList<Integer> winners = game.getWinners();
-								if(winners.size() == 0)
-									text = "Nobody wins";
-								else if(winners.size() == 1)
-									text = game.getPlayer(winners.get(0)).getName() + " wins";
-								else {
-									text = "";
-									for(Integer i : winners) {
-										text += game.getPlayer(i).getName()+ " & ";
-									}
-									text = text.substring(0, text.length()-2) + "win";
-								}
-							} else {
-								ArrayList<Integer> alive = game.getAlivePlayers();
-								if(alive.size() == 0)
-									text = "Nobody survives";
-								else if(alive.size() == 1)
-									text = "Survivor : " + game.getPlayer(alive.get(0)).getName();
-								else {
-									text = "Survivor : ";
-									for(Integer i : alive) {
-										text += game.getPlayer(i).getName()+ " & ";
-									}
-									text = text.substring(0, text.length()-2);
+					synchronized (game) {
+						/// Evenements pad
+						InputEvent event;
+						while((event = gameMsgReceiver.pollInputEvent()) != null) {
+							if(event.padId < game.getPlayerCount()) {
+								switch(event.eventType) {
+								case MOTION_2D:
+									game.handleJoystickEvent(event.padId, event.x, -event.y);
+									break;
+								case KEY_DOWN:
+								case KEY_UP:
+									game.handleButtonEvent(event.padId, event.eventType == EventType.KEY_DOWN);
+									break;
+								default:
+									break;
 								}
 							}
-							canvas.drawText(text, (w-scoreWidth)/2, h/2, paint);
 						}
 						
-						/// Affichage des scores
-						canvas.save();
-						canvas.clipRect((w-scoreWidth), 0, scoreWidth, h);
-						canvas.translate((w-scoreWidth), 0);
+						// Game engine
+						if(!isMenuOpened() && frameCount % game.nbFramePerStep == 0) {
+							game.step();
+						}
 						
-						canvas.drawColor(SCORE_BACKGROUND_COLOR);
-						
-						float textSize = (float)(w-scoreWidth)/20;
-						paint.setTextSize(textSize);
-						
-						/// Mode de jeu
-						paint.setColor(0xff111111);
-						paint.setTextAlign(Align.CENTER);
-						canvas.drawText(Rules.current.name, (float)(w-scoreWidth)/2, textSize*1.2f, paint);
-						canvas.drawText("Goal : "+Rules.current.scoreLimit, (float)(w-scoreWidth)/2, (textSize*1.2f)*2, paint);
-						
-						/// Joueurs et scores
-						for(int i = 0; i < game.getPlayerCount(); i++) {
-							Player p = game.getPlayer(i);
-							paint.setColor(p.getColor());
-							paint.setTextAlign(Align.LEFT);
-							canvas.drawText(p.getName(), textSize*1.2f, (textSize*1.2f)*i, paint);
-							paint.setTextAlign(Align.RIGHT);
-							canvas.drawText(""+p.getScore(), scoreWidth-textSize*1.2f, (textSize*1.2f)*i, paint);
+						// graphic engine
+						if(surfaceHolder.getSurface().isValid()){
+							Canvas canvas = surfaceHolder.lockCanvas();
+	
+							final int w = canvas.getWidth();
+							final int h = canvas.getHeight();
+							final int scoreWidth = h / 3;
 							
-							paint.setColor(p.getColor());
-							canvas.drawLine(textSize*1.2f, (textSize*1.2f)*(i-0.5f), textSize*1.2f+paint.measureText(p.getName()), (textSize*1.2f)*(i-0.5f), paint);
+							/// Compute the scale of the game's surface
+							float scale = (float) h / game.getMap().height;
+							float ratio = (float) (w-scoreWidth) / h;
+							//Log.i("###", "m.w=" + game.getMap().width+ " m.h="+game.getMap().height+" r1="+((float) (w-scoreWidth) / h)+" r2="+(game.getMap().width/game.getMap().height));
+							// Si le ratio n'a jamais été modifié, on l'adapte à la taille de l'écran
+							if(game.getMapRatio() != ratio) {
+								game.setMapSize(game.getMapScaleLevel(), ratio);
+								game.reset();
+							}
+							
+							// Affichage du jeu
+							canvas.save();
+							canvas.clipRect(0, 0, (w-scoreWidth), h);
+							canvas.scale(scale, scale);
+							
+							renderer.render(canvas, game);
+							
+							canvas.restore();
+							
+							// Affichage des vainqueurs si manche ou partie terminée
+							if(game.isRoundFinished || game.isGameFinished) {
+								paint.setTextSize((w-scoreWidth)/20);
+								paint.setColor(0xff111111);
+								paint.setTextAlign(Align.CENTER);
+								String text;
+								if(game.isGameFinished) {
+									ArrayList<Integer> winners = game.getWinners();
+									if(winners.size() == 0)
+										text = "Nobody wins";
+									else if(winners.size() == 1)
+										text = game.getPlayer(winners.get(0)).getName() + " wins";
+									else {
+										text = "";
+										for(Integer i : winners) {
+											text += game.getPlayer(i).getName()+ " & ";
+										}
+										text = text.substring(0, text.length()-2) + "win";
+									}
+								} else {
+									ArrayList<Integer> alive = game.getAlivePlayers();
+									if(alive.size() == 0)
+										text = "Nobody survives";
+									else if(alive.size() == 1)
+										text = "Survivor : " + game.getPlayer(alive.get(0)).getName();
+									else {
+										text = "Survivor : ";
+										for(Integer i : alive) {
+											text += game.getPlayer(i).getName()+ " & ";
+										}
+										text = text.substring(0, text.length()-2);
+									}
+								}
+								canvas.drawText(text, (w-scoreWidth)/2, h/2, paint);
+							}
+							
+							/// Affichage des scores
+							canvas.save();
+							canvas.clipRect((w-scoreWidth), 0, w, h);
+							canvas.translate((w-scoreWidth), 0);
+							
+							canvas.drawColor(SCORE_BACKGROUND_COLOR);
+							
+							float textSize = (float) scoreWidth / 7.5f;
+							paint.setTextSize(textSize);
+							
+							/// Mode de jeu
+							paint.setColor(SCORE_TEXT_COLOR);
+							paint.setTextAlign(Align.CENTER);
+							canvas.drawText(Rules.current.name, (float)scoreWidth/2, textSize*1.2f, paint);
+							canvas.drawText("Goal : "+Rules.current.scoreLimit, (float)scoreWidth/2, (textSize*1.2f)*2, paint);
+							
+							/// Joueurs et scores
+							ArrayList<Integer> order = game.getOrder();
+							for(int i = 0; i < game.getPlayerCount(); i++) {
+								Player p = game.getPlayer(order.get(i));
+								paint.setColor(p.getColor());
+								paint.setTextAlign(Align.LEFT);
+								canvas.drawText(p.getName(), textSize*0.5f, (textSize*1.2f)*(i+1+3), paint);
+								paint.setTextAlign(Align.RIGHT);
+								canvas.drawText(""+p.getScore(), scoreWidth-textSize*0.5f, (textSize*1.2f)*(i+1+3), paint);
+								
+								if(p.isDead()) {
+									paint.setColor(p.getColor());
+									paint.setStrokeWidth(textSize / 15);
+									
+									canvas.drawLine(textSize*0.5f, (textSize*1.2f)*(i+1+3-0.25f), textSize*0.5f+paint.measureText(p.getName()), (textSize*1.2f)*(i+1+3-0.25f), paint);
+								}
+							}
+							
+							canvas.restore();
+	
+							
+							//Log.i("###", "draw="+(SystemClock.elapsedRealtime() - t));
+							surfaceHolder.unlockCanvasAndPost(canvas);
 						}
 						
-						canvas.restore();
-						
-						
-						//Log.i("###", "draw="+(SystemClock.elapsedRealtime() - t));
-						surfaceHolder.unlockCanvasAndPost(canvas);
-					}
+					} // Fin synchronized(game)
+				
 					try {
-						
 						Thread.sleep(Math.max(0, GameRenderer.DELAY_DRAW - (SystemClock.elapsedRealtime() - t)));
 					} catch (InterruptedException e) {}
-				}
+				}// Fin while(running)
 			}
 		}
 }

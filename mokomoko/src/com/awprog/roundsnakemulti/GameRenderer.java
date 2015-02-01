@@ -4,17 +4,23 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import android.graphics.Canvas;
+import android.graphics.CornerPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PathEffect;
 
 import com.awprog.roundsnakemulti.Item.Effects;
 import com.awprog.roundsnakemulti.Snake.Part;
 
 public class GameRenderer {
-	final static int BACKGROUND_COLOR = 0xffaaaaaa;
+	final static int BACKGROUND_COLOR = 0xffeeeeee;
 	final static long DELAY_DRAW = 20;
 	
 	private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+	
+	public GameRenderer() {
+		paint.setPathEffect(new CornerPathEffect(0.05f));
+	}
 	
 	public void render(Canvas canvas, GameEngine game) {
 		canvas.drawColor(BACKGROUND_COLOR);
@@ -69,10 +75,11 @@ public class GameRenderer {
 						if(effects.sharpTeeth) {
 							canvas.save();
 							canvas.translate(pos[0], pos[1]);
-							canvas.scale(part.radius, part.radius);
+							canvas.scale(part.radius*0.85f, part.radius*0.85f);
 							canvas.rotate((float) Math.toDegrees(part.direction));
 							paint.setColor(0xff000000);
 							canvas.drawPath(getTrianglePath(), paint);
+							canvas.scale(0.75f, 0.6f);
 							paint.setColor(0xffeeeeee);
 							canvas.drawPath(getTrianglePath(), paint);
 							canvas.restore();
@@ -85,9 +92,9 @@ public class GameRenderer {
 							paint.setColor(0xff000000);
 							canvas.drawCircle(0, 0, 0.75f, paint);
 							paint.setColor(0xffeeeeee);
-							canvas.drawCircle(0.25f, 0, 0.45f, paint);
+							canvas.drawCircle(-0.15f, 0, 0.45f, paint);
 							paint.setColor(0xff000000);
-							canvas.drawCircle(0.1f, 0, 0.15f, paint);
+							canvas.drawCircle(0.0f, 0, 0.15f, paint);
 							canvas.restore();
 						}
 						else if(effects.fatalTrap) {
@@ -98,8 +105,8 @@ public class GameRenderer {
 							paint.setColor(0xff000000);
 							canvas.drawRect(-0.6f, -0.6f, 0.6f, 0.6f, paint);
 							paint.setColor(0xffeeeeee);
-							canvas.drawRect(-0.55f, -0.55f, -0.05f, -0.05f, paint);
-							canvas.drawRect(0.05f, 0.05f, 0.55f, 0.55f, paint);
+							canvas.drawRect(-0.5f, -0.5f, -0.1f, -0.1f, paint);
+							canvas.drawRect(0.1f, 0.1f, 0.5f, 0.5f, paint);
 							canvas.restore();
 						}
 					}
@@ -139,9 +146,9 @@ public class GameRenderer {
 		canvas.scale(item.radius, item.radius);
 		canvas.rotate(r.nextFloat()*360/5);
 		paint.setColor(0x88ffffff);
-		canvas.drawCircle(0.5f, 0, 0.25f, paint);
-		canvas.drawCircle(-0.25f, +0.43f, 0.25f, paint);
-		canvas.drawCircle(-0.25f, -0.43f, 0.25f, paint);
+		canvas.drawCircle(0.5f, 0, 0.4f, paint);
+		canvas.drawCircle(-0.25f, +0.43f, 0.4f, paint);
+		canvas.drawCircle(-0.25f, -0.43f, 0.4f, paint);
 		canvas.restore();
 	}
 	/** Un rond avec des pointes qui dépassent **/

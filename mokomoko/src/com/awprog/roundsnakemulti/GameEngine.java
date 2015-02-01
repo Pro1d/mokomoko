@@ -1,6 +1,8 @@
 package com.awprog.roundsnakemulti;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 
 public class GameEngine {
@@ -23,12 +25,15 @@ public class GameEngine {
 		setPlayerCount(2);
 		setMapSize(defaultScaleLevel, 1);
 		setSpeedLevel(defaultSpeedLevel);
+		reset();
 	}
 	
 	/** Réinitialise tout, à appeler après un changement de mode de jeu par exemple **/
-	public void reset() {
-		setPlayerCount(playerCount);
-		setMapSize(scaleLevel, ratio);
+	synchronized public void reset() {
+		players = new Player[playerCount];
+		for(int i = 0; i < playerCount; i++)
+			players[i] = new Player(i);
+		map = new Map(players.length, getScaleLevel(scaleLevel)*ratio, getScaleLevel(scaleLevel));
 		newGame();
 		newRound();
 	}
@@ -37,11 +42,11 @@ public class GameEngine {
 		return stepCount > 0;
 	}
 	
-	/** Crée le nombre de joueurs désiré **/
-	public void setPlayerCount(int count) {
-		players = new Player[count];
+	/** Crée le nombre de joueurs désiré; nécessite l'appel à reset() après **/
+	synchronized public void setPlayerCount(int count) {
+		/*players = new Player[count];
 		for(int i = 0; i < count; i++)
-			players[i] = new Player(i);
+			players[i] = new Player(i);*/
 		playerCount = count;
 	}
 	/** Retourne le nombre de joueur **/
@@ -54,11 +59,11 @@ public class GameEngine {
 	}
 
 	
-	/** Crée une nouvelle carte avec les dimensions données **/
-	public void setMapSize(int scaleLevel, float ratio) {
+	/** Crée une nouvelle carte avec les dimensions données; nécessite l'appel à reset() après **/
+	synchronized public void setMapSize(int scaleLevel, float ratio) {
 		this.scaleLevel = scaleLevel;
 		this.ratio = ratio;
-		map = new Map(players.length, getScaleLevel(scaleLevel)*ratio, getScaleLevel(scaleLevel));
+		//map = new Map(players.length, getScaleLevel(scaleLevel)*ratio, getScaleLevel(scaleLevel));
 	}
 	/** Retourne le ratio height/width de la carte **/
 	public float getMapRatio() {
@@ -105,6 +110,7 @@ public class GameEngine {
 		
 		/// Carte
 		map.step(players, stepCount);
+		map.createItems();
 		
 		/// Fin de manche / de partie
 		if(isRoundFinished()) {
@@ -205,6 +211,22 @@ public class GameEngine {
 				alive.add(p.getNumber());
 		
 		return alive;
+	}
+	/** Retourne le classement de chaque joueur en fonction de leur score
+	 * sous forme d'une liste contenant à l'index i le numéro du joueur à
+	 * la (i+1)ème position **/
+	public ArrayList<Integer> getOrder() {
+		ArrayList<Integer> order = new ArrayList<Integer>();
+		for(int i = 0; i < playerCount; i++)
+			order.add(i);
+		Collections.sort(order, new Comparator<Integer>() {
+			@Override
+			public int compare(Integer arg0, Integer arg1) {
+				return players[arg1].getScore() - players[arg0].getScore();
+			}
+		});
+		
+		return order;
 	}
 	
 	/** Retourne la carte **/

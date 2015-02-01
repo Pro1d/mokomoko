@@ -138,42 +138,47 @@ public class Map {
 			
 			for(Player p : players)
 			if(!p.isDead() || p.isRecentlyDead(frameCount)) {
-				for(Part part : p.getSnake().getParts())
-				if(p != player || head != part){
-					float dx = part.x-head.x, dy = part.y-head.y;
-					float d2 = dx*dx+dy*dy, d_col = part.radius+head.radius;
-					
-					// Collision
-					if(d2 < d_col*d_col) {
-						// Dents tranchantes -> l'adversaire se fait couper la queue
-						if(player.hasInUseItem() && player.getInUseItem().sharpTeeth && part != p.getSnake().getHead()) {
-							p.cutSnake(part);
-							break;
-						}
-						// Le joueur mange la queue de l'autre et meurt
-						else {
-							player.kill(frameCount, p.getNumber()); // peut être un suicide
-							changeKillScore(players, p.getNumber(), player.getNumber());
-							break;
+				int partIndex = 0;
+				for(Part part : p.getSnake().getParts()) {
+					if(p != player || partIndex > 2){
+						float dx = part.x-head.x, dy = part.y-head.y;
+						float d2 = dx*dx+dy*dy, d_col = part.radius+head.radius;
+						
+						// Collision
+						if(d2 < d_col*d_col) {
+							// Dents tranchantes -> l'adversaire se fait couper la queue
+							if(player.hasInUseItem() && player.getInUseItem().sharpTeeth && part != p.getSnake().getHead()) {
+								p.cutSnake(part);
+								break;
+							}
+							// Le joueur mange la queue de l'autre et meurt
+							else {
+								player.kill(frameCount, p.getNumber()); // peut être un suicide
+								changeKillScore(players, p.getNumber(), player.getNumber(), frameCount);
+								break;
+							}
 						}
 					}
+					partIndex++;
 				}
 			}
 		}
 	}
 
 	/** Donne des points aux joueurs en fonction de l'identité de la victime et du tueur **/
-	private void changeKillScore(Player[] players, int murderer, int victim) {
+	private void changeKillScore(Player[] players, int murderer, int victim, int stepCount) {
 		if(murderer == victim)
 			players[victim].addKillScore(Rules.current.scoreSuicide);
 		else {
 			for(int i = 0; i < players.length; i++)
+			if(!players[i].isDead() || players[i].isRecentlyDead(stepCount)) {
 				if(i == victim)
 					players[i].addKillScore(Rules.current.scoreTarget);
 				else if(i == murderer)
 					players[i].addKillScore(Rules.current.scoreKiller);
 				else
 					players[i].addKillScore(Rules.current.scoreOther);
+			}
 		}
 	}
 }

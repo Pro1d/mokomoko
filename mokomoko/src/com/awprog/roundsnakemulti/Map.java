@@ -13,8 +13,8 @@ public class Map {
 	Map(int nbPlayer, float width, float height) {
 		this.width = width;
 		this.height = height;
-		maxApple = Math.max((int) (nbPlayer*0.7), 1);
-		maxBonus = (nbPlayer-nbApples);
+		maxApple = (int) (Rules.current.nbApplesPerPlayer * nbPlayer + Rules.current.nbApples);
+		maxBonus = (int) (Rules.current.nbBonusPerPlayer * nbPlayer + Rules.current.nbBonus);
 	}
 
 	/** Initialise la carte pour une nouvelle partie **/
@@ -153,11 +153,27 @@ public class Map {
 						// Le joueur mange la queue de l'autre et meurt
 						else {
 							player.kill(frameCount, p.getNumber()); // peut être un suicide
+							changeKillScore(players, p.getNumber(), player.getNumber());
 							break;
 						}
 					}
 				}
 			}
+		}
+	}
+
+	/** Donne des points aux joueurs en fonction de l'identité de la victime et du tueur **/
+	private void changeKillScore(Player[] players, int murderer, int victim) {
+		if(murderer == victim)
+			players[victim].addKillScore(Rules.current.scoreSuicide);
+		else {
+			for(int i = 0; i < players.length; i++)
+				if(i == victim)
+					players[i].addKillScore(Rules.current.scoreTarget);
+				else if(i == murderer)
+					players[i].addKillScore(Rules.current.scoreKiller);
+				else
+					players[i].addKillScore(Rules.current.scoreOther);
 		}
 	}
 }

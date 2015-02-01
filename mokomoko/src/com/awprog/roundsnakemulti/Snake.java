@@ -12,7 +12,7 @@ public class Snake {
 	void reset(float px, float py, float dir) {
 		parts.clear();
 		parts.add(new Part(px, py, dir));
-		length = 4;
+		length = Rules.current.initialLength;
 		size = 0.5f;
 	}
 	
@@ -44,7 +44,7 @@ public class Snake {
 	public void step(float dir, Map map, int player) {
 		Part head = parts.getFirst().clone();
 		head.direction = getDirStep(dir);
-		head.radius = head.radius*0.5f + size*0.5f;
+		head.radius = (head.radius*0.5f + size*0.5f) * (float) Math.pow(Rules.current.growthWithLengthFactor, length);
 		//head.speed = speed*0.5f + snk.size*(defaultSpeed)*0.5f;
 		float speed = head.radius * GameEngine.defaultSpeed;
 		head.x += speed*Math.cos(head.direction);
@@ -63,7 +63,7 @@ public class Snake {
 		while(bigdelta > Math.PI) bigdelta-=2*Math.PI;
 		while(bigdelta <-Math.PI) bigdelta+=2*Math.PI;
 
-		final float deltamax = (float) Math.min(Math.PI/3, (Math.PI - 2.1*Math.asin(1.0/GameEngine.defaultSpeed)));//Math.PI/3;
+		final float deltamax = (float) Math.toRadians(Rules.current.maxAngleTurn);//(float) Math.min(Math.PI/3, (Math.PI - 2.1*Math.asin(1.0/GameEngine.defaultSpeed)));//Math.PI/3;
 		if(bigdelta > deltamax)
 			bigdelta = deltamax;
 		else if(bigdelta < -deltamax)

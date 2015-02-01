@@ -75,20 +75,20 @@ public class Item {
 		
 		static Effects getAppleEffects() {
 			Effects e = new Effects(Appearance.APPLE);
-			e.snakeGrowth = 2;
+			e.snakeGrowth = Rules.current.appleGrowth;
 			return e;
 		}
 		static Effects getGrowthEffects(Map map) {
 			Effects e = new Effects(Appearance.BONUS);
 			e.snakeRadiusMultiplicator = 1.45f;
-			e.maxDuration = (int) (Math.sqrt(map.width*map.height) / (GameEngine.defaultSpeed*e.snakeRadiusMultiplicator));
+			e.maxDuration = (int) (Math.sqrt(map.width*map.height) / (GameEngine.defaultSpeed*e.snakeRadiusMultiplicator) * Rules.current.bonusDurationMultiplicator);
 			e.manualActivation = true;
 			return e;
 		}
 		static Effects getSharpTeethEffects(Map map) {
 			Effects e = new Effects(Appearance.BONUS);
 			e.sharpTeeth = true;
-			e.maxDuration = (int) (Math.sqrt(map.width*map.height) / GameEngine.defaultSpeed);
+			e.maxDuration = (int) (Math.sqrt(map.width*map.height) / GameEngine.defaultSpeed * Rules.current.bonusDurationMultiplicator);
 			e.manualActivation = true;
 			return e;
 		}

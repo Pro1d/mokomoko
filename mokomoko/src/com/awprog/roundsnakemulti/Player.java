@@ -67,7 +67,11 @@ public class Player {
 
 	/** Score du joueur en prennant en compte les règles du jeu **/
 	public int getScore() {
-		return (int) (Rules.getRules().killScoreFactor * killScore + Rules.getRules().lengthScoreFactor * snk.getLength());
+		return (int) (Rules.current.killScoreFactor * killScore + Rules.current.lengthScoreFactor * snk.getLength());
+	}
+	/** Ajoute des kills au compteur de kill de ce joueur **/
+	public void addKillScore(int score) {
+		killScore += score;
 	}
 	/** Score du joueur **/
 	public int getColor() {
@@ -134,7 +138,7 @@ public class Player {
 	/** Avance d'un pas, actionne les items si nécessaire **/
 	public void step(Map map, int frameCount) {
 		if(isDead()) {
-			if(getDeathTime(frameCount) >= Rules.getRules().delayRevive && Rules.getRules().delayRevive != -1)
+			if(getDeathTime(frameCount) >= Rules.current.delayRevive && Rules.current.delayRevive != -1)
 				revive(map);
 		}
 		else {

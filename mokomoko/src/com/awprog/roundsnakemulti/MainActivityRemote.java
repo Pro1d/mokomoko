@@ -1,6 +1,7 @@
 package com.awprog.roundsnakemulti;
 
 import java.net.Socket;
+import java.util.ArrayList;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -19,6 +20,8 @@ import android.view.View.OnTouchListener;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.RadioGroup;
+import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
@@ -47,7 +50,7 @@ public class MainActivityRemote extends Activity {
 		public void onCreate(Bundle savedInstanceState) {
 			super.onCreate(savedInstanceState);
 			requestWindowFeature(Window.FEATURE_NO_TITLE);
-			setContentView(R.layout.menu_layout);
+			setContentView(R.layout.menu_remote_layout);
 			
 			mySurfaceView = new MySurfaceView(this);
 			
@@ -83,7 +86,31 @@ public class MainActivityRemote extends Activity {
 					((Button)findViewById(R.id.b_play)).setText("Play");
 					((Button)findViewById(R.id.b_reset)).setEnabled(false);
 				}});
-			
+			/// Game mode
+			((RadioGroup) findViewById(R.id.rg_mode)).setOnCheckedChangeListener(new OnCheckedChangeListener() {
+				@Override public void onCheckedChanged(RadioGroup group, int checkedId) {
+					switch(checkedId) {
+					case R.id.r_mode_dm:
+						Rules.setRulesType(Rules.RULES_DM);
+						game.reset();
+						break;
+					case R.id.r_mode_og:
+						Rules.setRulesType(Rules.RULES_OG);
+						game.reset();
+						break;
+					case R.id.r_mode_lr:
+						Rules.setRulesType(Rules.RULES_LR);
+						game.reset();
+						break;
+					case R.id.r_mode_cs:
+						Rules.setRulesType(Rules.RULES_CS);
+						game.reset();
+						break;
+					}
+					((Button)findViewById(R.id.b_play)).setText("Play");
+					((Button)findViewById(R.id.b_reset)).setEnabled(false);
+				}
+			});
 			sbSpeed = ((SeekBar) findViewById(R.id.sb_speed));
 			sbSpeed.setMax(Game.maxSpeedLevel);
 			sbSpeed.setProgress(Game.defaultSpeedLevel);
@@ -288,6 +315,7 @@ public class MainActivityRemote extends Activity {
 					long t = SystemClock.elapsedRealtime();
 					frameCount++;
 					
+					/// Evenements pad
 					InputEvent event;
 					while((event = gameMsgReceiver.pollInputEvent()) != null) {
 						if(event.padId < game.getPlayerCount()) {
@@ -334,6 +362,42 @@ public class MainActivityRemote extends Activity {
 						
 						canvas.restore();
 						
+						// Affichage des vainqueurs si manche ou partie terminée
+						if(game.isRoundFinished || game.isGameFinished) {
+							paint.setTextSize((w-scoreWidth)/100);
+							paint.setColor(0xff111111);
+							paint.setTextAlign(Align.CENTER);
+							String text;
+							if(game.isGameFinished) {
+								ArrayList<Integer> winners = game.getWinners();
+								if(winners.size() == 0)
+									text = "Nobody wins";
+								else if(winners.size() == 1)
+									text = game.getPlayer(winners.get(0)).getName() + " wins";
+								else {
+									text = "";
+									for(Integer i : winners) {
+										text += game.getPlayer(i).getName()+ " & ";
+									}
+									text = text.substring(0, text.length()-2) + "win";
+								}
+							} else {
+								ArrayList<Integer> alive = game.getAlivePlayers();
+								if(alive.size() == 0)
+									text = "Nobody survives";
+								else if(alive.size() == 1)
+									text = "Survivor : " + game.getPlayer(alive.get(0)).getName();
+								else {
+									text = "Survivor : ";
+									for(Integer i : alive) {
+										text += game.getPlayer(i).getName()+ " & ";
+									}
+									text = text.substring(0, text.length()-2);
+								}
+							}
+							canvas.drawText(text, (w-scoreWidth)/2, h/2, paint);
+						}
+						
 						/// Affichage des scores
 						canvas.save();
 						canvas.clipRect((w-scoreWidth), 0, scoreWidth, h);
@@ -347,8 +411,8 @@ public class MainActivityRemote extends Activity {
 						/// Mode de jeu
 						paint.setColor(0xff111111);
 						paint.setTextAlign(Align.CENTER);
-						canvas.drawText(Rules.getRules().name, (float)(w-scoreWidth)/2, textSize*1.2f, paint);
-						canvas.drawText("Goal : "+Rules.getRules().scoreLimit, (float)(w-scoreWidth)/2, (textSize*1.2f)*2, paint);
+						canvas.drawText(Rules.current.name, (float)(w-scoreWidth)/2, textSize*1.2f, paint);
+						canvas.drawText("Goal : "+Rules.current.scoreLimit, (float)(w-scoreWidth)/2, (textSize*1.2f)*2, paint);
 						
 						/// Joueurs et scores
 						for(int i = 0; i < game.getPlayerCount(); i++) {

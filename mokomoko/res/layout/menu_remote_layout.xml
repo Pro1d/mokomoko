@@ -5,9 +5,10 @@
         android:layout_height="match_parent" >
 
     <ScrollView 
+		android:id="@+id/sv_main"
 	    android:layout_width="match_parent"
-	    android:layout_height="match_parent"
-		android:background="#A000">
+	    android:layout_height="match_parent">
+		<!--android:background="#A000"-->
 	    
 		<LinearLayout
 		    android:id="@+id/ll_main"
@@ -15,7 +16,8 @@
 		    android:layout_height="wrap_content"
 		    android:gravity="center_horizontal"
 		    android:orientation="vertical"
-		    android:padding="20dp" >
+		    android:padding="20dp"
+		    android:background="#A000">
 	    
 		    <TextView
 		        android:id="@+id/tv_title"

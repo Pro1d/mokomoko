@@ -8,6 +8,7 @@ import android.graphics.CornerPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PathEffect;
+import android.graphics.RectF;
 
 import com.awprog.roundsnakemulti.Item.Effects;
 import com.awprog.roundsnakemulti.Snake.Part;
@@ -16,10 +17,9 @@ public class GameRenderer {
 	final static int BACKGROUND_COLOR = 0xffeeeeee;
 	final static long DELAY_DRAW = 20;
 	
-	private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG);
 	
 	public GameRenderer() {
-		paint.setPathEffect(new CornerPathEffect(0.05f));
 	}
 	
 	public void render(Canvas canvas, GameEngine game) {
@@ -78,10 +78,12 @@ public class GameRenderer {
 							canvas.scale(part.radius*0.85f, part.radius*0.85f);
 							canvas.rotate((float) Math.toDegrees(part.direction));
 							paint.setColor(0xff000000);
+							paint.setPathEffect(new CornerPathEffect(5f));
 							canvas.drawPath(getTrianglePath(), paint);
 							canvas.scale(0.75f, 0.6f);
 							paint.setColor(0xffeeeeee);
 							canvas.drawPath(getTrianglePath(), paint);
+							paint.setPathEffect(null);
 							canvas.restore();
 						}
 						else if(effects.snakeRadiusMultiplicator > 1.0f) {
@@ -103,10 +105,10 @@ public class GameRenderer {
 							canvas.scale(part.radius, part.radius);
 							canvas.rotate((float) Math.toDegrees(part.direction) + 45);
 							paint.setColor(0xff000000);
-							canvas.drawRect(-0.6f, -0.6f, 0.6f, 0.6f, paint);
+							canvas.drawRoundRect(new RectF(-0.6f, -0.6f, 0.6f, 0.6f), 0.25f, 0.25f, paint);
 							paint.setColor(0xffeeeeee);
-							canvas.drawRect(-0.5f, -0.5f, -0.1f, -0.1f, paint);
-							canvas.drawRect(0.1f, 0.1f, 0.5f, 0.5f, paint);
+							canvas.drawRoundRect(new RectF(-0.5f, -0.5f, -0.1f, -0.1f), 0.15f, 0.15f, paint);
+							canvas.drawRoundRect(new RectF(0.1f, 0.1f, 0.5f, 0.5f), 0.15f, 0.15f, paint);
 							canvas.restore();
 						}
 					}
@@ -182,7 +184,9 @@ public class GameRenderer {
 		canvas.scale(item.radius*0.9f, item.radius*0.9f);
 		canvas.rotate(r.nextFloat()*360/5);
 		paint.setColor(0x88ffffff);
+		paint.setPathEffect(new CornerPathEffect(5f));
 		canvas.drawPath(getStarPath(), paint);
+		paint.setPathEffect(null);
 		canvas.restore();
 	}
 	
@@ -191,11 +195,12 @@ public class GameRenderer {
 	private static Path getStarPath() {
 		if(starPath.isEmpty()) {
 			starPath.moveTo(1, 0);
-			for(int i = 1; i <= 10; i++) {
+			for(int i = 1; i < 10; i++) {
 				double x = Math.cos(Math.PI*2/10 * i) * (i%2 == 0? 1 : 0.6f);
 				double y = Math.sin(Math.PI*2/10 * i) * (i%2 == 0? 1 : 0.6f);
 				starPath.lineTo((float)x, (float)y);
 			}
+			starPath.close();
 		}
 		return starPath;
 		
@@ -206,11 +211,12 @@ public class GameRenderer {
 	private static Path getTeethPath() {
 		if(teethPath.isEmpty()) {
 			teethPath.moveTo(1, 0);
-			for(int i = 1; i <= 24; i++) {
+			for(int i = 1; i < 24; i++) {
 				double x = Math.cos(Math.PI*2/24 * i) * (i%2 == 0? 1 : 1.05f);
 				double y = Math.sin(Math.PI*2/24 * i) * (i%2 == 0? 1 : 1.05f);
 				teethPath.lineTo((float)x, (float)y);
 			}
+			teethPath.close();
 		}
 		return teethPath;
 	}
@@ -222,7 +228,8 @@ public class GameRenderer {
 			trianglePath.moveTo(1, 0);
 			trianglePath.lineTo(-0.5f, 0.87f);
 			trianglePath.lineTo(-0.5f, -0.87f);
-			trianglePath.lineTo(1, 0);
+			trianglePath.close();
+			//trianglePath.lineTo(1, 0);
 		}
 		return trianglePath;
 	}

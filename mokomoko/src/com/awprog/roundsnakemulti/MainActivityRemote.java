@@ -154,7 +154,7 @@ public class MainActivityRemote extends Activity {
 			});
 		}
 		private void showMenu() {
-			((LinearLayout) findViewById(R.id.ll_main)).setVisibility(View.VISIBLE);
+			((View) findViewById(R.id.sv_main)).setVisibility(View.VISIBLE);
 			// jeu en cours
 			if(game.hasBegun()) {
 				((Button)findViewById(R.id.b_play)).setText("Resume");
@@ -167,7 +167,7 @@ public class MainActivityRemote extends Activity {
 			}
 		}
 		private void hideMenu() {
-			((LinearLayout) findViewById(R.id.ll_main)).setVisibility(View.GONE);
+			((View) findViewById(R.id.sv_main)).setVisibility(View.GONE);
 		}
 		@Override
 		public void onBackPressed() {
@@ -178,7 +178,7 @@ public class MainActivityRemote extends Activity {
 			}
 		}
 		private boolean isMenuOpened() {
-			return ((LinearLayout) findViewById(R.id.ll_main)).getVisibility() == View.VISIBLE;
+			return ((View) findViewById(R.id.sv_main)).getVisibility() == View.VISIBLE;
 		}
 		@SuppressLint("NewApi")
 		@Override

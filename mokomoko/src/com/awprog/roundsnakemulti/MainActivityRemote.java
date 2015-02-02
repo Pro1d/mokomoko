@@ -1,6 +1,5 @@
 package com.awprog.roundsnakemulti;
 
-import java.lang.reflect.Field;
 import java.net.Socket;
 import java.util.ArrayList;
 
@@ -59,20 +58,14 @@ public class MainActivityRemote extends Activity {
 			((RelativeLayout) findViewById(R.id.rl_main)).addView(mySurfaceView, 0);
 			buildMenu();
 		}
+		
 		private void buildMenu() {
-			// TODO 
-			for(Field f : Rules.Values.class.getDeclaredFields())
-				Log.i("###", "Declared Field : "+f.getName());
-			try {
-				Rules.Values.class.getDeclaredField("name").set(Rules.current, "#Hack");
-			} catch (IllegalAccessException e) {
-				e.printStackTrace();
-			} catch (IllegalArgumentException e) {
-				e.printStackTrace();
-			} catch (NoSuchFieldException e) {
-				e.printStackTrace();
-			}
+			
 			final LinearLayout ll = (LinearLayout) findViewById(R.id.ll_main);
+			final RulesEditorView rulesEdit = new RulesEditorView(this);
+			rulesEdit.build(Rules.current);
+			ll.addView(rulesEdit);
+			
 			ll.setOnTouchListener(new OnTouchListener(){ @SuppressLint("ClickableViewAccessibility")
 				@Override public boolean onTouch(View v,MotionEvent event){ return true; }});
 			((Button)ll.findViewById(R.id.b_play)).setOnClickListener(new OnClickListener() {
@@ -108,18 +101,22 @@ public class MainActivityRemote extends Activity {
 					switch(checkedId) {
 					case R.id.r_mode_dm:
 						Rules.setRulesType(Rules.RULES_DM);
+						rulesEdit.build(Rules.current);
 						game.reset();
 						break;
 					case R.id.r_mode_og:
 						Rules.setRulesType(Rules.RULES_OG);
+						rulesEdit.build(Rules.current);
 						game.reset();
 						break;
 					case R.id.r_mode_lr:
 						Rules.setRulesType(Rules.RULES_LR);
+						rulesEdit.build(Rules.current);
 						game.reset();
 						break;
 					case R.id.r_mode_cs:
 						Rules.setRulesType(Rules.RULES_CS);
+						rulesEdit.build(Rules.current);
 						game.reset();
 						break;
 					}
@@ -169,17 +166,10 @@ public class MainActivityRemote extends Activity {
 		private void hideMenu() {
 			((View) findViewById(R.id.sv_main)).setVisibility(View.GONE);
 		}
-		@Override
-		public void onBackPressed() {
-			if(isMenuOpened()) {
-				super.onBackPressed();
-			} else {
-				showMenu();
-			}
-		}
 		private boolean isMenuOpened() {
 			return ((View) findViewById(R.id.sv_main)).getVisibility() == View.VISIBLE;
 		}
+		
 		@SuppressLint("NewApi")
 		@Override
 		public void onWindowFocusChanged(boolean hasFocus) {
@@ -192,6 +182,15 @@ public class MainActivityRemote extends Activity {
 						| View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
 						| View.SYSTEM_UI_FLAG_FULLSCREEN
 						| View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+		}
+		
+		@Override
+		public void onBackPressed() {
+			if(isMenuOpened()) {
+				super.onBackPressed();
+			} else {
+				showMenu();
+			}
 		}
 		
 		@Override
@@ -241,7 +240,6 @@ public class MainActivityRemote extends Activity {
 			super.onResume();
 			mySurfaceView.onResumeMySurfaceView();
 		}
-
 		@Override
 		protected void onPause() {
 			super.onPause();

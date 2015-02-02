@@ -18,7 +18,6 @@ public class Snake {
 	
 	/** Supprime les derniers éléments afin d'obtenir la longueur voulue; Peut laisser un piège sur la carte **/
 	void shrinkToLength(Map map, int player) {
-		if(length > 1)
 		while(parts.size() > length) {
 			Part p = parts.getLast();
 			if(p.containingTrap)

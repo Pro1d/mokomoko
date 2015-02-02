@@ -5,7 +5,10 @@ import java.util.ArrayList;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Paint.Align;
@@ -18,10 +21,13 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RadioGroup;
+import android.widget.ScrollView;
+import android.widget.TableLayout;
 import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
@@ -41,6 +47,8 @@ public class MainActivityRemote extends Activity {
 		GameRenderer renderer = new GameRenderer();
 		GameMessageReceiver gameMsgReceiver = new GameMessageReceiver();
 		Thread strRcvThread;
+		RemoteManager remoteRegistration;
+		boolean registrationPhase = false;
 		
 		/**
 		 * TODO player/pad manager
@@ -59,12 +67,42 @@ public class MainActivityRemote extends Activity {
 			buildMenu();
 		}
 		
-		private void buildMenu() {
+		private AlertDialog buildPadRegistrationDialog() {
+			TableLayout tableView = new TableLayout(this);
+			remoteRegistration = new RemoteManager(tableView);
+			AlertDialog.Builder adb = new AlertDialog.Builder(this);
 			
+			ScrollView sv = new ScrollView(this);
+			sv.addView(tableView);
+			
+			adb.setTitle("Press a button to join");
+			adb.setView(sv);
+			adb.setPositiveButton("Done", new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					remoteRegistration.buildPadTable();
+					game.setPlayerCount(remoteRegistration.getPlayerCount());
+					game.reset();
+					registrationPhase = false;
+				}
+			});
+			adb.setOnCancelListener(new DialogInterface.OnCancelListener() {
+				@Override
+				public void onCancel(DialogInterface dialog) {
+					registrationPhase = false;
+					remoteRegistration.clear();
+				}
+			});
+			
+			return adb.create();
+		}
+		private void buildMenu() {
 			final LinearLayout ll = (LinearLayout) findViewById(R.id.ll_main);
+			
 			final RulesEditorView rulesEdit = new RulesEditorView(this);
 			rulesEdit.build(Rules.current);
 			ll.addView(rulesEdit);
+			((ViewGroup)rulesEdit.getChildAt(0)).getChildAt(1).clearFocus();
 			
 			ll.setOnTouchListener(new OnTouchListener(){ @SuppressLint("ClickableViewAccessibility")
 				@Override public boolean onTouch(View v,MotionEvent event){ return true; }});
@@ -76,7 +114,7 @@ public class MainActivityRemote extends Activity {
 			((Button)ll.findViewById(R.id.b_reset)).setOnClickListener(new OnClickListener() {
 				@Override public void onClick(View v) {
 					((Button)findViewById(R.id.b_play)).setText("Play");
-					((Button)findViewById(R.id.b_reset)).setEnabled(false);
+					//((Button)findViewById(R.id.b_reset)).setEnabled(false);
 					game.reset();
 				}
 			});
@@ -86,14 +124,22 @@ public class MainActivityRemote extends Activity {
 					game.setPlayerCount(Math.min(game.getPlayerCount()+1, 42));
 					game.reset();
 					((Button)findViewById(R.id.b_play)).setText("Play");
-					((Button)findViewById(R.id.b_reset)).setEnabled(false);
+					//((Button)findViewById(R.id.b_reset)).setEnabled(false);
 				}});
 			((Button)ll.findViewById(R.id.b_delete_player)).setOnClickListener(new OnClickListener() {
 				@Override public void onClick(View v) {
 					game.setPlayerCount(Math.max(game.getPlayerCount()-1, 2));
 					game.reset();
 					((Button)findViewById(R.id.b_play)).setText("Play");
-					((Button)findViewById(R.id.b_reset)).setEnabled(false);
+					//((Button)findViewById(R.id.b_reset)).setEnabled(false);
+				}});
+			/// Pad registration
+			final AlertDialog adRegistration = buildPadRegistrationDialog();
+			((Button)ll.findViewById(R.id.b_register_player)).setOnClickListener(new OnClickListener() {
+				@Override public void onClick(View v) {
+					remoteRegistration.clear();
+					registrationPhase = true;
+					adRegistration.show();
 				}});
 			/// Game mode
 			((RadioGroup) findViewById(R.id.rg_mode)).setOnCheckedChangeListener(new OnCheckedChangeListener() {
@@ -121,7 +167,7 @@ public class MainActivityRemote extends Activity {
 						break;
 					}
 					((Button)findViewById(R.id.b_play)).setText("Play");
-					((Button)findViewById(R.id.b_reset)).setEnabled(false);
+					//((Button)findViewById(R.id.b_reset)).setEnabled(false);
 				}
 			});
 			sbSpeed = ((SeekBar) findViewById(R.id.sb_speed));
@@ -144,7 +190,7 @@ public class MainActivityRemote extends Activity {
 					game.setMapSize(seekBar.getProgress(), game.getMapRatio());
 					game.reset();
 					((Button)findViewById(R.id.b_play)).setText("Play");
-					((Button)findViewById(R.id.b_reset)).setEnabled(false);
+					//((Button)findViewById(R.id.b_reset)).setEnabled(false);
 				}
 				@Override public void onStartTrackingTouch(SeekBar seekBar) { }
 				@Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) { }
@@ -152,19 +198,29 @@ public class MainActivityRemote extends Activity {
 		}
 		private void showMenu() {
 			((View) findViewById(R.id.sv_main)).setVisibility(View.VISIBLE);
+
 			// jeu en cours
 			if(game.hasBegun()) {
 				((Button)findViewById(R.id.b_play)).setText("Resume");
-				((Button)findViewById(R.id.b_reset)).setEnabled(true);
+				//((Button)findViewById(R.id.b_reset)).setEnabled(true);
 			}
 			// jeu non commenc�
 			else {
 				((Button)findViewById(R.id.b_play)).setText("Play");
-				((Button)findViewById(R.id.b_reset)).setEnabled(false);
+				//((Button)findViewById(R.id.b_reset)).setEnabled(false);
 			}
 		}
+		@SuppressLint("NewApi")
 		private void hideMenu() {
 			((View) findViewById(R.id.sv_main)).setVisibility(View.GONE);
+
+			if (android.os.Build.VERSION.SDK_INT >= 19)
+				getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+						| View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+						| View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+						| View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+						| View.SYSTEM_UI_FLAG_FULLSCREEN
+						| View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
 		}
 		private boolean isMenuOpened() {
 			return ((View) findViewById(R.id.sv_main)).getVisibility() == View.VISIBLE;
@@ -338,17 +394,22 @@ public class MainActivityRemote extends Activity {
 						/// Evenements pad
 						InputEvent event;
 						while((event = gameMsgReceiver.pollInputEvent()) != null) {
-							if(event.padId < game.getPlayerCount()) {
-								switch(event.eventType) {
-								case MOTION_2D:
-									game.handleJoystickEvent(event.padId, event.x, -event.y);
-									break;
-								case KEY_DOWN:
-								case KEY_UP:
-									game.handleButtonEvent(event.padId, event.eventType == EventType.KEY_DOWN);
-									break;
-								default:
-									break;
+							if(registrationPhase) {
+								remoteRegistration.registerPad(event.padId, null);
+							} else {
+								int playerNumber = remoteRegistration.getPlayer(event.padId);
+								if(0 <= playerNumber && playerNumber < game.getPlayerCount()) {
+									switch(event.eventType) {
+									case MOTION_2D:
+										game.handleJoystickEvent(playerNumber, event.x, -event.y);
+										break;
+									case KEY_DOWN:
+									case KEY_UP:
+										game.handleButtonEvent(playerNumber, event.eventType == EventType.KEY_DOWN);
+										break;
+									default:
+										break;
+									}
 								}
 							}
 						}

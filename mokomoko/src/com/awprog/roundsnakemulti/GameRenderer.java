@@ -7,7 +7,6 @@ import android.graphics.Canvas;
 import android.graphics.CornerPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.PathEffect;
 import android.graphics.RectF;
 
 import com.awprog.roundsnakemulti.Item.Effects;
@@ -18,6 +17,7 @@ public class GameRenderer {
 	final static long DELAY_DRAW = 20;
 	
 	private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG);
+	private final Random random = new Random();
 	
 	public GameRenderer() {
 	}
@@ -142,11 +142,11 @@ public class GameRenderer {
 		canvas.drawCircle(item.x, item.y, item.radius, paint);
 		
 		// Symbole centrale
-		Random r = new Random(item.itemId);
+		random.setSeed(item.itemId);
 		canvas.save();
 		canvas.translate(item.x, item.y);
 		canvas.scale(item.radius, item.radius);
-		canvas.rotate(r.nextFloat()*360/5);
+		canvas.rotate(random.nextFloat()*360/5);
 		paint.setColor(0x88ffffff);
 		canvas.drawCircle(0.5f, 0, 0.4f, paint);
 		canvas.drawCircle(-0.25f, +0.43f, 0.4f, paint);
@@ -156,11 +156,11 @@ public class GameRenderer {
 	/** Un rond avec des pointes qui dépassent **/
 	private void drawObstacle(Canvas canvas, Item item, int pointColor) {
 		// Pointes
-		Random r = new Random(item.itemId);
+		random.setSeed(item.itemId);
 		canvas.save();
 		canvas.translate(item.x, item.y);
 		canvas.scale(item.radius*1.05f, item.radius*1.05f);
-		canvas.rotate(r.nextFloat()*360/5);
+		canvas.rotate(random.nextFloat()*360/5);
 		paint.setColor(pointColor);
 		canvas.drawPath(getStarPath(), paint);
 		canvas.restore();
@@ -178,11 +178,11 @@ public class GameRenderer {
 		paint.setColor(0xff3333bb);
 		canvas.drawCircle(item.x, item.y, item.radius, paint);
 		// Etoile centrale
-		Random r = new Random(item.itemId);
+		random.setSeed(item.itemId);
 		canvas.save();
 		canvas.translate(item.x, item.y);
 		canvas.scale(item.radius*0.9f, item.radius*0.9f);
-		canvas.rotate(r.nextFloat()*360/5);
+		canvas.rotate(random.nextFloat()*360/5);
 		paint.setColor(0x88ffffff);
 		paint.setPathEffect(new CornerPathEffect(5f));
 		canvas.drawPath(getStarPath(), paint);

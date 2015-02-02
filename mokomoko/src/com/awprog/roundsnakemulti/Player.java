@@ -206,7 +206,10 @@ public class Player {
 			/// Piège posé par le joueur
 			if(effect.manualActivation) {
 				Part head = snk.getHead();
+				float lastRadius = head.radius;
 				head.radius = 1.5f +  random.nextFloat();
+				head.x += (head.radius-lastRadius)*Math.cos(head.direction);
+				head.y += (head.radius-lastRadius)*Math.sin(head.direction);
 				head.containingTrap = true;
 			}
 			/// Joueur tombé dans le piège 
@@ -259,7 +262,7 @@ public class Player {
 			body.removeLast();
 		} while(queue != p && body.size() > 1);
 		
-		snk.setLength(snk.getParts().size());
+		snk.setLength(body.size());
 	}
 	
 	/** Indique si le joueur peut ramasser l'item donné **/

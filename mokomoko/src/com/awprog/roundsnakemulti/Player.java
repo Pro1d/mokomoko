@@ -3,6 +3,7 @@ package com.awprog.roundsnakemulti;
 import java.util.LinkedList;
 import java.util.Random;
 
+import com.awprog.roundsnakemulti.GameEngine.DeathType;
 import com.awprog.roundsnakemulti.Item.Effects;
 import com.awprog.roundsnakemulti.Snake.Part;
 
@@ -225,7 +226,7 @@ public class Player {
 			/// Joueur tombé dans le piège 
 			else {
 				kill(effect.player);
-				Player.changeKillScore(gameEngineRef.getPlayers(), this.getNumber(), this.getNumber());
+				gameEngineRef.createDeathCertificate(number, effect.player, DeathType.Trap);
 			}
 		}
 		
@@ -305,14 +306,18 @@ public class Player {
 	static protected void changeKillScore(Player[] players, int murderer, int victim) {
 		if(murderer == victim)
 			players[victim].addKillScore(Rules.current.scoreSuicide);
-		else {
-			for(int i = 0; i < players.length; i++)
-			if(!players[i].isDead() || players[i].isRecentlyDead()) {
-				if(i == victim)
+		
+		for(int i = 0; i < players.length; i++) {
+			if(i == victim) { 
+				if(victim != murderer)
 					players[i].addKillScore(Rules.current.scoreTarget);
-				else if(i == murderer)
+			}
+			else if(i == murderer) {
+				if(victim != murderer && !players[i].isDead())
 					players[i].addKillScore(Rules.current.scoreKiller);
-				else
+			}
+			else {
+				if(!players[i].isDead())
 					players[i].addKillScore(Rules.current.scoreOther);
 			}
 		}

@@ -3,6 +3,7 @@ package com.awprog.roundsnakemulti;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedList;
 
 
 public class GameEngine {
@@ -20,6 +21,8 @@ public class GameEngine {
 	/// Joueur
 	private Player[] players;
 	private int playerCount;
+	// Liste des dernières victimes
+	private LinkedList<DeathCertificate> deathHistory = new LinkedList<DeathCertificate>();
 
 	GameEngine() {
 		setPlayerCount(2);
@@ -33,7 +36,7 @@ public class GameEngine {
 		players = new Player[playerCount];
 		for(int i = 0; i < playerCount; i++)
 			players[i] = new Player(i, this);
-		map = new Map(players.length, getScaleLevel(scaleLevel)*ratio, getScaleLevel(scaleLevel));
+		map = new Map(players.length, getScaleLevel(scaleLevel)*ratio, getScaleLevel(scaleLevel), this);
 		newGame();
 		newRound();
 	}
@@ -106,14 +109,21 @@ public class GameEngine {
 				return;
 		}
 		
-		
 		/// Joueurs
 		for(Player player : players)
 			player.step();
 		
 		/// Carte
-		map.step(players, stepCount);
+		map.step();
 		map.createItems();
+		
+		/// Gestion des décès
+		for(DeathCertificate dt : deathHistory) {
+			/// Nouveau kill, on attribue les points
+			if(dt.date == getElapsedStep()) {
+				Player.changeKillScore(getPlayers(), dt.murderer, dt.dead);
+			}
+		}
 		
 		/// Fin de manche / de partie
 		if(isRoundFinished()) {
@@ -143,6 +153,7 @@ public class GameEngine {
 		
 		isRoundFinished = false;
 		isGameFinished = false;
+		deathHistory.clear();
 	}
 	
 	/** Initialisation pour une nouvelle manche **/
@@ -155,6 +166,7 @@ public class GameEngine {
 			p.newRound();
 		
 		isRoundFinished = false;
+		deathHistory.clear();
 	}
 	
 	/** Teste si la manche est terminée **/
@@ -266,7 +278,25 @@ public class GameEngine {
 		// TODO compute width
 		// TODO apply the new dimensions to the map
 	}
-
 	
+	public void createDeathCertificate(int dead, int murderer, DeathType dt) {
+		deathHistory.add(new DeathCertificate(dead, murderer, dt));
+	}
+	
+	enum DeathType { Trap, Hit };
+	public class DeathCertificate {
+		static final int validityDuration = 8;
+		int date;
+		int dead;
+		int murderer;
+		DeathType death;
+	
+		public DeathCertificate(int dead, int murderer, DeathType death) {
+			date = getElapsedStep();
+			this.dead = dead;
+			this.murderer = murderer;
+			this.death = death; 
+		}
+	}
 }
 

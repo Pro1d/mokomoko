@@ -2,6 +2,7 @@ package com.awprog.roundsnakemulti;
 
 import java.util.ArrayList;
 
+import com.awprog.roundsnakemulti.GameEngine.DeathType;
 import com.awprog.roundsnakemulti.Item.Effects.Appearance;
 import com.awprog.roundsnakemulti.Snake.Part;
 
@@ -9,12 +10,16 @@ public class Map {
 	float width, height;// en nombre de case (<=> largeur d'un serpent)
 	private int maxApple, maxBonus, nbApples = 0, nbBonus = 0;
 	private ArrayList<Item> items = new ArrayList<Item>();
+	// Reference vers les données du jeu
+	final GameEngine gameEngineRef;
 	
-	Map(int nbPlayer, float width, float height) {
+	Map(int nbPlayer, float width, float height, GameEngine gameEngineRef) {
 		this.width = width;
 		this.height = height;
 		maxApple = (int) (Rules.current.nbApplesPerPlayer * nbPlayer + Rules.current.nbApples);
 		maxBonus = (int) (Rules.current.nbBonusPerPlayer * nbPlayer + Rules.current.nbBonus);
+		
+		this.gameEngineRef = gameEngineRef;
 	}
 
 	/** Initialise la carte pour une nouvelle partie **/
@@ -98,12 +103,12 @@ public class Map {
 	}
 	
 	/** Mise à jour de la carte, donne les items aux joueurs qui les ramassent **/
-	public void step(Player[] players, int frameCount) {
+	public void step() {
 		/// Contact avec un items, le joueur le plus proche ramasse
 		for(int i = 0; i < items.size(); i++) {
 			Player p = null;
 			float depth = 0;// profondeur de collision maximum
-			for(Player player : players)
+			for(Player player : gameEngineRef.getPlayers())
 			if(!player.isDead()) {
 				float x = player.getSnakeHeadX() - items.get(i).x, y = player.getSnakeHeadY() - items.get(i).y;
 				float d = (float) Math.hypot(x, y);
@@ -129,14 +134,14 @@ public class Map {
 		}
 		
 		/// Collision entre joueur
-		for(int i = 0; i < players.length; i++) {
+		for(int i = 0; i < gameEngineRef.getPlayerCount(); i++) {
 			/// Pour varier les priorités, on change à chaque frame
-			Player player = players[(i+frameCount) % players.length];
+			Player player = gameEngineRef.getPlayer((i+gameEngineRef.getElapsedStep()) % gameEngineRef.getPlayerCount());
 			if(player.isDead())
 				continue;
 			Part head = player.getSnake().getHead();
 			
-			for(Player p : players)
+			for(Player p : gameEngineRef.getPlayers())
 			if(!p.isDead() || p.isRecentlyDead()) {
 				int partIndex = 0;
 				for(Part part : p.getSnake().getParts()) {
@@ -154,7 +159,7 @@ public class Map {
 							// Le joueur mange la queue de l'autre et meurt
 							else {
 								player.kill(p.getNumber()); // peut être un suicide
-								Player.changeKillScore(players, p.getNumber(), player.getNumber());
+								gameEngineRef.createDeathCertificate(player.getNumber(), p.getNumber(), DeathType.Hit);
 								break;
 							}
 						}

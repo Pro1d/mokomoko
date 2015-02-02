@@ -218,7 +218,7 @@ public class Player {
 			if(effect.manualActivation) {
 				Part head = snk.getHead();
 				float lastRadius = head.radius;
-				head.radius = 1.5f +  random.nextFloat();
+				head.radius = 1.0f +  0.5f*random.nextFloat();
 				head.x += (head.radius-lastRadius)*Math.cos(head.direction);
 				head.y += (head.radius-lastRadius)*Math.sin(head.direction);
 				head.containingTrap = true;

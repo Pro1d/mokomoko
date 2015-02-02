@@ -442,7 +442,7 @@ public class MainActivityRemote extends Activity {
 							canvas.clipRect(0, 0, (w-scoreWidth), h);
 							canvas.scale(scale, scale);
 							
-							renderer.render(canvas, game);
+							renderer.render(canvas, game, frameCount);
 							
 							canvas.restore();
 							

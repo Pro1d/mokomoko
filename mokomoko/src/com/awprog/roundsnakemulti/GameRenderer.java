@@ -17,22 +17,22 @@ public class GameRenderer {
 	final static long DELAY_DRAW = 20;
 	
 	private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG);
-	private final Random random = new Random();
+	private static final Random random = new Random();
 	
 	public GameRenderer() {
 	}
 	
-	public void render(Canvas canvas, GameEngine game) {
+	public void render(Canvas canvas, GameEngine game, int frameCount) {
 		canvas.drawColor(BACKGROUND_COLOR);
 		
 		drawMap(canvas, game.getMap(), game);
 		
 		for(int i = 0; i < game.getPlayerCount(); i++)
-			drawSnake(canvas, game.getPlayer(i), game.getMap(), game);
+			drawSnake(canvas, game.getPlayer(i), game.getMap(), game, frameCount);
 	}
 	
 	/** Dessine le snake avec les effets actifs et l'item équipé **/
-	private void drawSnake(Canvas canvas, Player player, Map map, GameEngine game) {
+	private void drawSnake(Canvas canvas, Player player, Map map, GameEngine game, int frameCount) {
 		for(Part part : player.getSnake().getParts()) {
 			ArrayList<float[]> positions = map.getEquivalentPositions(part.x, part.y, part.radius);
 			
@@ -53,19 +53,19 @@ public class GameRenderer {
 					if(!player.isDead() && player.hasInUseItem() && player.getInUseItem().sharpTeeth) {
 						// Disparition en 1.4 sec
 						int disappearanceDuration = (int) (1400 / DELAY_DRAW);
-						int elapsedTime = Math.min(disappearanceDuration, player.getInUseItem().duration * game.nbFramePerStep);
+						int remainingTime = Math.min(disappearanceDuration, frameCount%game.nbFramePerStep + (player.getInUseItem().maxDuration - player.getInUseItem().duration) * game.nbFramePerStep);
 						paint.setColor(0x0);
-						paint.setAlpha((int) (255*elapsedTime/disappearanceDuration));
+						paint.setAlpha((int) (255*remainingTime/disappearanceDuration));
 						
 						canvas.save();
 						canvas.translate(pos[0], pos[1]);
-						canvas.scale(part.radius, part.radius);
+						canvas.scale(part.radius*1.05f, part.radius*1.05f);
 						canvas.rotate((float) Math.toDegrees(part.direction));
 						canvas.drawPath(getTeethPath(), paint);
 						canvas.restore();
 						
 						paint.setColor(0xffeeeeee);
-						paint.setAlpha((int) (255*elapsedTime/disappearanceDuration));
+						paint.setAlpha((int) (255*remainingTime/disappearanceDuration));
 						canvas.drawCircle(pos[0], pos[1], part.radius * 0.9f, paint);
 					}
 					
@@ -120,7 +120,9 @@ public class GameRenderer {
 	/** Dessinne les éléments de la carte **/
 	private void drawMap(Canvas canvas, Map map, GameEngine game) {
 		/** Dessin des pommes, bonus et obstacle **/
-		for(Item i : map.getItems()) {
+		for(Item i : map.getItems())
+		// TODO map.getEquivalentPositions(i.x, i.y, i.radius)
+		{
 			switch(i.effects.appearance) {
 			case APPLE:
 				drawApple(canvas, i);
@@ -146,7 +148,7 @@ public class GameRenderer {
 		canvas.save();
 		canvas.translate(item.x, item.y);
 		canvas.scale(item.radius, item.radius);
-		canvas.rotate(random.nextFloat()*360/5);
+		canvas.rotate(random.nextFloat()*360.0f);
 		paint.setColor(0x88ffffff);
 		canvas.drawCircle(0.5f, 0, 0.4f, paint);
 		canvas.drawCircle(-0.25f, +0.43f, 0.4f, paint);
@@ -159,17 +161,17 @@ public class GameRenderer {
 		random.setSeed(item.itemId);
 		canvas.save();
 		canvas.translate(item.x, item.y);
-		canvas.scale(item.radius*1.05f, item.radius*1.05f);
-		canvas.rotate(random.nextFloat()*360/5);
+		canvas.scale(item.radius*1.15f, item.radius*1.15f);
+		canvas.rotate(random.nextFloat()*360.0f);
 		paint.setColor(pointColor);
-		canvas.drawPath(getStarPath(), paint);
+		canvas.drawPath(getPikesPath(), paint);
 		canvas.restore();
 		
 		// Cercle
 		paint.setColor(0xff553030);
 		canvas.drawCircle(item.x, item.y, item.radius, paint);
-		paint.setColor(pointColor);
-		canvas.drawCircle(item.x, item.y, item.radius*0.1f, paint);
+		//paint.setColor(pointColor);
+		//canvas.drawCircle(item.x, item.y, item.radius*0.1f, paint);
 		
 	}
 	/** Un rond avec une étoile au centre **/
@@ -182,12 +184,32 @@ public class GameRenderer {
 		canvas.save();
 		canvas.translate(item.x, item.y);
 		canvas.scale(item.radius*0.9f, item.radius*0.9f);
-		canvas.rotate(random.nextFloat()*360/5);
+		canvas.rotate(random.nextFloat()*360.0f);
 		paint.setColor(0x88ffffff);
 		paint.setPathEffect(new CornerPathEffect(5f));
 		canvas.drawPath(getStarPath(), paint);
 		paint.setPathEffect(null);
 		canvas.restore();
+	}
+	
+	private static final Path pikesPath = new Path();
+	/** Retourne le path d'une étoile aléatoire de rayon 1 **/
+	private static Path getPikesPath() {
+		pikesPath.reset();
+		
+		pikesPath.moveTo(1, 0);
+		int pikesCount = random.nextInt(5) + 10;
+		for(int i = 1; i < pikesCount*2; i++) {
+			double a = (i%2 == 0) ? (random.nextDouble()*2-1) * Math.PI / pikesCount : 0;
+			double r = (i%2 == 0 ? 1 : 0.7);
+			double x = Math.cos(Math.PI / pikesCount * i + a) * r;
+			double y = Math.sin(Math.PI / pikesCount * i + a) * r;
+			pikesPath.lineTo((float)x, (float)y);
+		}
+		pikesPath.close();
+		
+		return pikesPath;
+		
 	}
 	
 	private static final Path starPath = new Path();
@@ -207,13 +229,14 @@ public class GameRenderer {
 	}
 	
 	private static final Path teethPath = new Path();
-	/** Retourne le path d'une dentelle en cercle de rayon intérieur 1 **/
+	/** Retourne le path d'une dentelle en cercle **/
 	private static Path getTeethPath() {
 		if(teethPath.isEmpty()) {
 			teethPath.moveTo(1, 0);
-			for(int i = 1; i < 24; i++) {
-				double x = Math.cos(Math.PI*2/24 * i) * (i%2 == 0? 1 : 1.05f);
-				double y = Math.sin(Math.PI*2/24 * i) * (i%2 == 0? 1 : 1.05f);
+			final int teethCount = 20;
+			for(int i = 1; i < teethCount*2; i++) {
+				double x = Math.cos(Math.PI/teethCount * i) * (i%2 == 0? 1 : 1.12);
+				double y = Math.sin(Math.PI/teethCount * i) * (i%2 == 0? 1 : 1.12);
 				teethPath.lineTo((float)x, (float)y);
 			}
 			teethPath.close();

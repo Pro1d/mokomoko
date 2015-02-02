@@ -16,7 +16,7 @@ public class Item {
 	private Item(Map map) {
 		if(map != null)
 			setRandomPosition(map);
-		itemId = nextItemId++;
+		itemId = (nextItemId += random.nextInt(1337));
 	}
 	public static Item createApple(Map map) {
 		Item i = new Item(map);

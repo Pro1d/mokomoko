@@ -61,7 +61,7 @@ public class Map {
 	/** Indique si le cercle de position (x,y) et de rayon 'radius' est en collision avec un des items de la map **/
 	public boolean collisionCircleItems(float x, float y, float radius) {
 		for(Item i : items)
-			if((x-i.x)*(x-i.x)+(y-i.y)*(y-i.y) <= radius+i.radius)
+			if((x-i.x)*(x-i.x)+(y-i.y)*(y-i.y) <= (radius+i.radius)*(radius+i.radius))
 				return true;
 		return false;
 	}

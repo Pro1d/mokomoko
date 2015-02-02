@@ -19,6 +19,9 @@ public class Player {
 	// Etat vital
 	private boolean isDead;
 	private int deathDate;
+	// Reference vers les données du jeu
+	final GameEngine gameEngineRef;
+	
 	
 	static final int colors[] = {// TODO color auto with HSV
 		0xffff0000,//rouge
@@ -46,10 +49,11 @@ public class Player {
 	static final Random random = new Random();
 	
 	
-	public Player(int num) {
+	public Player(int num, GameEngine gameEngineRef) {
 		color = colors[num % nbColor];
 		name = colorsName[num%nbColor] + (num/nbColor >= 1 ? " "+(1+num/nbColor) : "");
 		number = num;
+		this.gameEngineRef = gameEngineRef;
 	}
 	
 	/** Nom du joueur **/
@@ -89,7 +93,10 @@ public class Player {
 	}
 	
 	/** Initialise le joueur pour une nouvelle manche **/
-	public void newRound(int nbPlayers, Map map) {
+	public void newRound() {
+		Map map = gameEngineRef.getMap();
+		int nbPlayers = gameEngineRef.getPlayerCount();
+		
 		// Calcul de la position et direction initiale
 		double sqrt = Math.sqrt(nbPlayers);
 		int h = (int) Math.round(sqrt), w = (int) Math.ceil(sqrt);
@@ -105,9 +112,9 @@ public class Player {
 	}
 	
 	/** Tue le joueur **/
-	public void kill(int date, int murderer) {
+	public void kill(int murderer) {
 		isDead = true;
-		deathDate = date;
+		deathDate = gameEngineRef.getElapsedStep();
 		
 		equippedItem = null;
 		inUseItem = null;
@@ -115,15 +122,17 @@ public class Player {
 	}
 	
 	/** Redonne vie au joueur **/
-	public void revive(Map map) {
+	public void revive() {
+		Map map = gameEngineRef.getMap();
+		
 		isDead = false;
 		// TODO get a new position
 		snk.reset(random.nextFloat()*map.width, random.nextFloat()*map.height, padDir);
 	}
 	
 	/** Retourne le temps écoulé depuis la dernière mort **/
-	public int getDeathTime(int frameCount) {
-		return frameCount - deathDate;
+	public int getDeathTime() {
+		return gameEngineRef.getElapsedStep() - deathDate;
 	}
 	
 	/** Indique si le joueur est mort **/
@@ -131,15 +140,16 @@ public class Player {
 		return isDead;
 	}
 	/** Indique si le joueur est mort pendant le tour actuel **/
-	public boolean isRecentlyDead(int frameCount) {
-		return isDead && frameCount == deathDate;
+	public boolean isRecentlyDead() {
+		return isDead && gameEngineRef.getElapsedStep() == deathDate;
 	}
 	
 	/** Avance d'un pas, actionne les items si nécessaire **/
-	public void step(Map map, int frameCount) {
+	public void step() {
+		Map map = gameEngineRef.getMap();
 		if(isDead()) {
-			if(getDeathTime(frameCount) >= Rules.current.delayRevive && Rules.current.delayRevive != -1)
-				revive(map);
+			if(getDeathTime() >= Rules.current.delayRevive && Rules.current.delayRevive != -1)
+				revive();
 		}
 		else {
 			snk.step(padDir, map, number);
@@ -154,7 +164,7 @@ public class Player {
 				
 	
 				// Utilisattion de l'item équipé
-				applyEffects(equippedItem, frameCount);
+				applyEffects(equippedItem);
 				equippedItem = null;
 			}
 			else {
@@ -197,7 +207,7 @@ public class Player {
 	}
 
 	/** Applique l'effet **/
-	public void applyEffects(Effects effect, int frameCount) {
+	public void applyEffects(Effects effect) {
 		/// Accélération / décélération
 		if(effect.snakeRadiusMultiplicator != 1.0f)
 			snk.setSize(0.5f * inUseItem.snakeRadiusMultiplicator);
@@ -214,7 +224,8 @@ public class Player {
 			}
 			/// Joueur tombé dans le piège 
 			else {
-				kill(frameCount, effect.player);
+				kill(effect.player);
+				Player.changeKillScore(gameEngineRef.getPlayers(), this.getNumber(), this.getNumber());
 			}
 		}
 		
@@ -271,7 +282,7 @@ public class Player {
 	}
 	
 	/** Ramasse et applique les effets de l'item **/
-	public void collect(Item item, int frameCount) {
+	public void collect(Item item) {
 		if(item.effects.manualActivation) {
 			if(!hasEquippedItem())
 				equippedItem = item.effects;
@@ -285,7 +296,25 @@ public class Player {
 			// Si Utilisation instantanée, l'item en cours d'utilisation n'est pas interrompu
 
 			// Utilisattion de l'item équipé
-			applyEffects(item.effects, frameCount);
+			applyEffects(item.effects);
+		}
+	}
+	
+
+	/** Donne des points aux joueurs en fonction de l'identité de la victime et du tueur **/
+	static protected void changeKillScore(Player[] players, int murderer, int victim) {
+		if(murderer == victim)
+			players[victim].addKillScore(Rules.current.scoreSuicide);
+		else {
+			for(int i = 0; i < players.length; i++)
+			if(!players[i].isDead() || players[i].isRecentlyDead()) {
+				if(i == victim)
+					players[i].addKillScore(Rules.current.scoreTarget);
+				else if(i == murderer)
+					players[i].addKillScore(Rules.current.scoreKiller);
+				else
+					players[i].addKillScore(Rules.current.scoreOther);
+			}
 		}
 	}
 }

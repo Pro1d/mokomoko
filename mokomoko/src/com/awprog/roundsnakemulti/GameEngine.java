@@ -32,7 +32,7 @@ public class GameEngine {
 	synchronized public void reset() {
 		players = new Player[playerCount];
 		for(int i = 0; i < playerCount; i++)
-			players[i] = new Player(i);
+			players[i] = new Player(i, this);
 		map = new Map(players.length, getScaleLevel(scaleLevel)*ratio, getScaleLevel(scaleLevel));
 		newGame();
 		newRound();
@@ -57,7 +57,10 @@ public class GameEngine {
 	public Player getPlayer(int i) {
 		return players[i];
 	}
-
+	/** Retourne le tableau des joueurs **/
+	public Player[] getPlayers() {
+		return players;
+	}
 	
 	/** Crée une nouvelle carte avec les dimensions données; nécessite l'appel à reset() après **/
 	synchronized public void setMapSize(int scaleLevel, float ratio) {
@@ -106,7 +109,7 @@ public class GameEngine {
 		
 		/// Joueurs
 		for(Player player : players)
-			player.step(map, stepCount);
+			player.step();
 		
 		/// Carte
 		map.step(players, stepCount);
@@ -149,7 +152,7 @@ public class GameEngine {
 		
 		/// Joueurs
 		for(Player p : players)
-			p.newRound(getPlayerCount(), map);
+			p.newRound();
 		
 		isRoundFinished = false;
 	}
@@ -263,5 +266,7 @@ public class GameEngine {
 		// TODO compute width
 		// TODO apply the new dimensions to the map
 	}
+
+	
 }
 

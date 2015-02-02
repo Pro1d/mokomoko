@@ -117,7 +117,7 @@ public class Map {
 			
 			if(p != null) {
 				Item it = items.get(i);
-				p.collect(it, frameCount);
+				p.collect(it);
 				if(it.effects.appearance == Appearance.APPLE)
 					nbApples--;
 				else if(it.effects.appearance == Appearance.BONUS)
@@ -137,7 +137,7 @@ public class Map {
 			Part head = player.getSnake().getHead();
 			
 			for(Player p : players)
-			if(!p.isDead() || p.isRecentlyDead(frameCount)) {
+			if(!p.isDead() || p.isRecentlyDead()) {
 				int partIndex = 0;
 				for(Part part : p.getSnake().getParts()) {
 					if(p != player || partIndex > 2){
@@ -153,8 +153,8 @@ public class Map {
 							}
 							// Le joueur mange la queue de l'autre et meurt
 							else {
-								player.kill(frameCount, p.getNumber()); // peut être un suicide
-								changeKillScore(players, p.getNumber(), player.getNumber(), frameCount);
+								player.kill(p.getNumber()); // peut être un suicide
+								Player.changeKillScore(players, p.getNumber(), player.getNumber());
 								break;
 							}
 						}
@@ -165,20 +165,4 @@ public class Map {
 		}
 	}
 
-	/** Donne des points aux joueurs en fonction de l'identité de la victime et du tueur **/
-	private void changeKillScore(Player[] players, int murderer, int victim, int stepCount) {
-		if(murderer == victim)
-			players[victim].addKillScore(Rules.current.scoreSuicide);
-		else {
-			for(int i = 0; i < players.length; i++)
-			if(!players[i].isDead() || players[i].isRecentlyDead(stepCount)) {
-				if(i == victim)
-					players[i].addKillScore(Rules.current.scoreTarget);
-				else if(i == murderer)
-					players[i].addKillScore(Rules.current.scoreKiller);
-				else
-					players[i].addKillScore(Rules.current.scoreOther);
-			}
-		}
-	}
 }

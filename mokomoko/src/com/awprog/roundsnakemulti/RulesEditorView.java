@@ -26,8 +26,6 @@ public class RulesEditorView extends TableLayout {
 		this.removeAllViews();
 		
 		for(final Field f : Rules.Values.class.getDeclaredFields()) {
-			Log.i("###", "Declared Field : "+f.getName());
-			
 			TableRow row = new TableRow(getContext());
 			
 			TextView fieldName = new TextView(getContext());

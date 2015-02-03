@@ -6,6 +6,7 @@ import java.util.Random;
 import android.graphics.Canvas;
 import android.graphics.CornerPathEffect;
 import android.graphics.Paint;
+import android.graphics.Paint.Style;
 import android.graphics.Path;
 import android.graphics.RectF;
 
@@ -20,6 +21,7 @@ public class GameRenderer {
 	private static final Random random = new Random();
 	
 	public GameRenderer() {
+		paint.setStyle(Style.FILL);
 	}
 	
 	public void render(Canvas canvas, GameEngine game, int frameCount) {

@@ -69,12 +69,15 @@ public class Rules {
 		r.nbApplesPerPlayer = 0.7f;
 		r.nbBonusConstant = 1;
 		r.nbBonusPerPlayer = 0.3f;
-		//r.mapScale = 1.0f;
+
 		r.bonusEffectDurationFactor = 1.0f;
 		r.appleGrowth = 2;
 		r.trapMinRadius = 1.0f;
 		r.trapMaxRadiusAugmentation = 0.5f;
+		r.itemRadius = 0.75f;
+		
 		r.delayRevive = -1;
+		
 		r.initialSnakeLength = 4;
 		r.snakeGrowthWithLengthFactor = 1.0f;
 		r.maxSnakeAngleTurn = 60;
@@ -82,6 +85,7 @@ public class Rules {
 		r.snakeDefaultSize = 0.5f;
 		r.snakeDefaultSpeed = 1.6f;
 		r.snakeSizeVariationSpeed = 0.5f;
+		
 		r.scoreKiller = 1;
 		r.scoreOther = 1;
 		r.scoreTarget = 0;

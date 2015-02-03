@@ -13,11 +13,15 @@ public class Snake {
 		parts.clear();
 		parts.add(new Part(px, py, dir));
 		length = Rules.current.initialSnakeLength;
-		size = 0.5f;
+		size = Rules.current.snakeDefaultSize;
 	}
 	
 	/** Supprime les derniers éléments afin d'obtenir la longueur voulue; Peut laisser un piège sur la carte **/
 	void shrinkToLength(Map map, int player) {
+		// Permet une croissance infinie
+		if(length <= 0)
+			return;
+		
 		while(parts.size() > length) {
 			Part p = parts.getLast();
 			if(p.containingTrap)

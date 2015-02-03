@@ -16,8 +16,8 @@ public class Map {
 	Map(int nbPlayer, float width, float height, GameEngine gameEngineRef) {
 		this.width = width;
 		this.height = height;
-		maxApple = (int) (Rules.current.nbApplesPerPlayer * nbPlayer + Rules.current.nbApplesConstant);
-		maxBonus = (int) (Rules.current.nbBonusPerPlayer * nbPlayer + Rules.current.nbBonusConstant);
+		maxApple = Math.round(Rules.current.nbApplesPerPlayer * nbPlayer + Rules.current.nbApplesConstant);
+		maxBonus = Math.round(Rules.current.nbBonusPerPlayer * nbPlayer + Rules.current.nbBonusConstant);
 		
 		this.gameEngineRef = gameEngineRef;
 	}

@@ -41,12 +41,12 @@ public class RulesEditorView extends TableLayout {
 			Button iczBtn = new Button(getContext());
 			iczBtn.setText("+");
 			iczBtn.setTypeface(Typeface.MONOSPACE);
-			iczBtn.setPadding(10, 0, 10, 0);
+			iczBtn.setPadding(20, 0, 20, 0);
 			row.addView(iczBtn);
 			Button dczBtn = new Button(getContext());
 			dczBtn.setText("-");
 			dczBtn.setTypeface(Typeface.MONOSPACE);
-			dczBtn.setPadding(10, 0, 10, 0);
+			dczBtn.setPadding(20, 0, 20, 0);
 			row.addView(dczBtn);
 			
 			try {
@@ -81,8 +81,6 @@ public class RulesEditorView extends TableLayout {
 					};
 					iczBtn.setOnClickListener(listener);
 					dczBtn.setOnClickListener(listener);
-					row.addView(iczBtn);
-					row.addView(dczBtn);
 				}
 				
 				/// FLOAT
@@ -95,7 +93,7 @@ public class RulesEditorView extends TableLayout {
 							try {
 								float val = ((Button)v).getText().toString().equals("-") ? -0.1f : +0.1f;
 								float result = Rules.Values.class.getDeclaredField(f.getName()).getFloat(rules) + val;
-								result = (float) (Math.round(result)*1000) / 1000;
+								result = (float) Math.round(result*1000) / 1000;
 								Rules.Values.class.getDeclaredField(f.getName()).setFloat(rules, result);
 								edit.setText(""+Rules.Values.class.getDeclaredField(f.getName()).getFloat(rules));
 							}

@@ -52,6 +52,13 @@ public class RemoteManager {
 	public int getPlayer(int padId) {
 		return padToPlayer.get(padId, -1);
 	}
+	/** Retourne l'id du pad associé à ce joueur, retourn -1 si le joueur n'existe pas **/
+	public int getPadId(int player) {
+		int index = padToPlayer.indexOfValue(player);
+		if(index == -1)
+			return -1;
+		return padToPlayer.keyAt(index);
+	}
 	/** Retourne le nombre de pad enregistré. La méthode buildPadTable doit être appelé avant **/
 	public int getPlayerCount() {
 		return padRegisteredCount;

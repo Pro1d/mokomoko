@@ -243,6 +243,11 @@ public class GameEngine {
 		return order;
 	}
 	
+	/** La liste des certificats de décès**/
+	public LinkedList<DeathCertificate> getDeathCertificates() {
+		return deathHistory;
+	}
+	
 	/** Retourne la carte **/
 	public Map getMap() {
 		return map;

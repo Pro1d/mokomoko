@@ -3,6 +3,7 @@ package com.awprog.roundsnakemulti;
 import java.lang.reflect.Field;
 
 import android.content.Context;
+import android.graphics.Typeface;
 import android.text.InputType;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -31,6 +32,7 @@ public class RulesEditorView extends TableLayout {
 			
 			TextView fieldName = new TextView(getContext());
 			fieldName.setText(f.getName());
+			fieldName.setPadding(0, 0, 10, 0);
 			row.addView(fieldName);
 			
 			final EditText edit = new EditText(getContext());
@@ -38,8 +40,14 @@ public class RulesEditorView extends TableLayout {
 			
 			Button iczBtn = new Button(getContext());
 			iczBtn.setText("+");
+			iczBtn.setTypeface(Typeface.MONOSPACE);
+			iczBtn.setPadding(10, 0, 10, 0);
+			row.addView(iczBtn);
 			Button dczBtn = new Button(getContext());
 			dczBtn.setText("-");
+			dczBtn.setTypeface(Typeface.MONOSPACE);
+			dczBtn.setPadding(10, 0, 10, 0);
+			row.addView(dczBtn);
 			
 			try {
 				edit.setText("...");
@@ -49,6 +57,8 @@ public class RulesEditorView extends TableLayout {
 				if(type.equals("java.lang.String")) {
 					edit.setInputType(InputType.TYPE_CLASS_TEXT);
 					edit.setText((String)Rules.Values.class.getDeclaredField(f.getName()).get(rules));
+					iczBtn.setEnabled(false);
+					dczBtn.setEnabled(false);
 				}
 				
 				/// INTEGER
@@ -85,6 +95,7 @@ public class RulesEditorView extends TableLayout {
 							try {
 								float val = ((Button)v).getText().toString().equals("-") ? -0.1f : +0.1f;
 								float result = Rules.Values.class.getDeclaredField(f.getName()).getFloat(rules) + val;
+								result = (float) (Math.round(result)*1000) / 1000;
 								Rules.Values.class.getDeclaredField(f.getName()).setFloat(rules, result);
 								edit.setText(""+Rules.Values.class.getDeclaredField(f.getName()).getFloat(rules));
 							}
@@ -95,8 +106,6 @@ public class RulesEditorView extends TableLayout {
 					};
 					iczBtn.setOnClickListener(listener);
 					dczBtn.setOnClickListener(listener);
-					row.addView(iczBtn);
-					row.addView(dczBtn);
 				}
 			}
 			catch (NoSuchFieldException e) { e.printStackTrace(); }

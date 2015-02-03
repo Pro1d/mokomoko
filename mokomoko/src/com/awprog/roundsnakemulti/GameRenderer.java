@@ -123,32 +123,32 @@ public class GameRenderer {
 	private void drawMap(Canvas canvas, Map map, GameEngine game) {
 		/** Dessin des pommes, bonus et obstacle **/
 		for(Item i : map.getItems())
-		// TODO map.getEquivalentPositions(i.x, i.y, i.radius)
+		for(float[] pos : map.getEquivalentPositions(i.x, i.y, i.radius))
 		{
 			switch(i.effects.appearance) {
 			case APPLE:
-				drawApple(canvas, i);
+				drawApple(canvas, i, pos);
 				break;
 			case BONUS:
-				drawBonus(canvas, i);
+				drawBonus(canvas, i, pos);
 				break;
 			case OBSTACLE:
-				drawObstacle(canvas, i, (i.effects.player != -1) ? game.getPlayer(i.effects.player).getColor() : 0xff202020);
+				drawObstacle(canvas, i, (i.effects.player != -1) ? game.getPlayer(i.effects.player).getColor() : 0xff202020, pos);
 				break;
 			}
 		}
 	}
 	
 	/** Un rond avec trois petits rond au centre **/
-	private void drawApple(Canvas canvas, Item item) {
+	private void drawApple(Canvas canvas, Item item, float[] pos) {
 		// Cercle
 		paint.setColor(0xffbb3333);
-		canvas.drawCircle(item.x, item.y, item.radius, paint);
+		canvas.drawCircle(pos[0], pos[1], item.radius, paint);
 		
 		// Symbole centrale
 		random.setSeed(item.itemId);
 		canvas.save();
-		canvas.translate(item.x, item.y);
+		canvas.translate(pos[0], pos[1]);
 		canvas.scale(item.radius, item.radius);
 		canvas.rotate(random.nextFloat()*360.0f);
 		paint.setColor(0x88ffffff);
@@ -158,11 +158,11 @@ public class GameRenderer {
 		canvas.restore();
 	}
 	/** Un rond avec des pointes qui dépassent **/
-	private void drawObstacle(Canvas canvas, Item item, int pointColor) {
+	private void drawObstacle(Canvas canvas, Item item, int pointColor, float[] pos) {
 		// Pointes
 		random.setSeed(item.itemId);
 		canvas.save();
-		canvas.translate(item.x, item.y);
+		canvas.translate(pos[0], pos[1]);
 		canvas.scale(item.radius*1.15f, item.radius*1.15f);
 		canvas.rotate(random.nextFloat()*360.0f);
 		paint.setColor(pointColor);
@@ -171,20 +171,20 @@ public class GameRenderer {
 		
 		// Cercle
 		paint.setColor(0xff553030);
-		canvas.drawCircle(item.x, item.y, item.radius, paint);
+		canvas.drawCircle(pos[0], pos[1], item.radius, paint);
 		//paint.setColor(pointColor);
 		//canvas.drawCircle(item.x, item.y, item.radius*0.1f, paint);
 		
 	}
 	/** Un rond avec une étoile au centre **/
-	private void drawBonus(Canvas canvas, Item item) {
+	private void drawBonus(Canvas canvas, Item item, float[] pos) {
 		// Cercle
 		paint.setColor(0xff3333bb);
-		canvas.drawCircle(item.x, item.y, item.radius, paint);
+		canvas.drawCircle(pos[0], pos[1], item.radius, paint);
 		// Etoile centrale
 		random.setSeed(item.itemId);
 		canvas.save();
-		canvas.translate(item.x, item.y);
+		canvas.translate(pos[0], pos[1]);
 		canvas.scale(item.radius*0.9f, item.radius*0.9f);
 		canvas.rotate(random.nextFloat()*360.0f);
 		paint.setColor(0x88ffffff);

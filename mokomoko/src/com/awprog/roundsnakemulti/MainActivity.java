@@ -30,7 +30,6 @@ import com.awprog.roundsnakemulti.Game.Map;
 import com.awprog.roundsnakemulti.Game.Player;
 import com.fbessou.sofa.GameMessageReceiver;
 import com.fbessou.sofa.InputEvent;
-import com.fbessou.sofa.InputEvent.EventType;
 import com.fbessou.sofa.ProxyConnector;
 import com.fbessou.sofa.ProxyConnector.OnConnectedListener;
 import com.fbessou.sofa.StringReceiver;

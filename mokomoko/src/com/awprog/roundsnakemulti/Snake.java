@@ -54,7 +54,7 @@ public class Snake {
 		
 		// New radius
 		float lastRadius = head.radius;
-		if(parts.size() >= 2 && parts.get(1).containingTrap)
+		if(parts.getFirst().containingTrap)
 			head.radius = size;
 		else
 			head.radius = (lastRadius*(1-Rules.current.snakeSizeVariationSpeed) + size*Rules.current.snakeSizeVariationSpeed);

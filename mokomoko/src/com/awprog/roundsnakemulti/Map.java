@@ -106,26 +106,32 @@ public class Map {
 	public void step() {
 		/// Contact avec un items, le joueur le plus proche ramasse
 		for(int i = 0; i < items.size(); i++) {
+			Item item = items.get(i);
 			Player p = null;
 			float depth = 0;// profondeur de collision maximum
-			for(Player player : gameEngineRef.getPlayers())
-			if(!player.isDead()) {
-				float x = player.getSnakeHeadX() - items.get(i).x, y = player.getSnakeHeadY() - items.get(i).y;
-				float d = (float) Math.hypot(x, y);
-				float d_col = items.get(i).radius + player.getSnakeHeadRadius();
-				if(d <= d_col && player.canCollect(items.get(i)))
-				if(depth < d_col-d) {
-					p = player;
-					depth = d_col-d;
+			
+			for(float[] pos : getEquivalentPositions(item.x, item.y, item.radius)) {
+				for(Player player : gameEngineRef.getPlayers()) { 
+					for(float[] ppos : getEquivalentPositions(player.getSnakeHeadX(), player.getSnakeHeadY(), item.radius)) {
+						if(!player.isDead()) {
+							float x = ppos[0] - pos[0], y = ppos[1] - pos[1];
+							float d = (float) Math.hypot(x, y);
+							float d_col = item.radius + player.getSnakeHeadRadius();
+							if(d <= d_col && player.canCollect(item))
+							if(depth < d_col-d) {
+								p = player;
+								depth = d_col-d;
+							}
+						}
+					}
 				}
 			}
 			
 			if(p != null) {
-				Item it = items.get(i);
-				p.collect(it);
-				if(it.effects.appearance == Appearance.APPLE)
+				p.collect(item);
+				if(item.effects.appearance == Appearance.APPLE)
 					nbApples--;
-				else if(it.effects.appearance == Appearance.BONUS)
+				else if(item.effects.appearance == Appearance.BONUS)
 					nbBonus--;
 				
 				items.remove(i);

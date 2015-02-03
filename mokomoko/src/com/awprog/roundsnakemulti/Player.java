@@ -211,14 +211,14 @@ public class Player {
 	public void applyEffects(Effects effect) {
 		/// Accélération / décélération
 		if(effect.snakeRadiusMultiplicator != 1.0f)
-			snk.setSize(0.5f * inUseItem.snakeRadiusMultiplicator);
+			snk.setSize(Rules.current.snakeDefaultSize * inUseItem.snakeRadiusMultiplicator);
 		
 		if(effect.fatalTrap) {
 			/// Piège posé par le joueur
 			if(effect.manualActivation) {
 				Part head = snk.getHead();
 				float lastRadius = head.radius;
-				head.radius = 1.0f +  0.5f*random.nextFloat();
+				head.radius = Rules.current.trapMinRadius +  Rules.current.trapMaxRadiusAugmentation*random.nextFloat();
 				head.x += (head.radius-lastRadius)*Math.cos(head.direction);
 				head.y += (head.radius-lastRadius)*Math.sin(head.direction);
 				head.containingTrap = true;
@@ -244,7 +244,7 @@ public class Player {
 	public void finishCurrenEffects() {
 		if(hasInUseItem()) {
 			if(inUseItem.snakeRadiusMultiplicator != 1.0f)
-				snk.setSize(0.5f);
+				snk.setSize(Rules.current.snakeDefaultSize);
 		}
 	}
 	

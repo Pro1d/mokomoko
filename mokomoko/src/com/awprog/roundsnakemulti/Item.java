@@ -9,7 +9,7 @@ public class Item {
 
 	final int itemId;
 	float x, y;
-	float radius = 0.75f;
+	float radius = Rules.current.itemRadius;
 	Effects effects;
 	
 	/** Crée un item en le positionnant correctement sur la carte **/
@@ -80,15 +80,15 @@ public class Item {
 		}
 		static Effects getGrowthEffects(Map map) {
 			Effects e = new Effects(Appearance.BONUS);
-			e.snakeRadiusMultiplicator = 1.45f;
-			e.maxDuration = (int) (Math.sqrt(map.width*map.height) / (GameEngine.defaultSpeed*e.snakeRadiusMultiplicator) * Rules.current.bonusDurationMultiplicator);
+			e.snakeRadiusMultiplicator = Rules.current.snakeSpeedBonusFactor;
+			e.maxDuration = (int) (Math.sqrt(map.width*map.height) / (Rules.current.snakeDefaultSpeed*e.snakeRadiusMultiplicator) * Rules.current.bonusEffectDurationFactor);
 			e.manualActivation = true;
 			return e;
 		}
 		static Effects getSharpTeethEffects(Map map) {
 			Effects e = new Effects(Appearance.BONUS);
 			e.sharpTeeth = true;
-			e.maxDuration = (int) (Math.sqrt(map.width*map.height) / GameEngine.defaultSpeed * Rules.current.bonusDurationMultiplicator);
+			e.maxDuration = (int) (Math.sqrt(map.width*map.height) / Rules.current.snakeDefaultSpeed * Rules.current.bonusEffectDurationFactor);
 			e.manualActivation = true;
 			return e;
 		}

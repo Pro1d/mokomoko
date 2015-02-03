@@ -496,7 +496,7 @@ public class MainActivityRemote extends Activity {
 							paint.setColor(SCORE_TEXT_COLOR);
 							paint.setTextAlign(Align.CENTER);
 							canvas.drawText(Rules.current.name, (float)scoreWidth/2, textSize*1.2f, paint);
-							canvas.drawText("Goal : "+Rules.current.scoreLimit, (float)scoreWidth/2, (textSize*1.2f)*2, paint);
+							canvas.drawText("Goal : "+Rules.current.scoreAim, (float)scoreWidth/2, (textSize*1.2f)*2, paint);
 							
 							/// Joueurs et scores
 							ArrayList<Integer> order = game.getOrder();

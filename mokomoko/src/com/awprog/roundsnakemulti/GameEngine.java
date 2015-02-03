@@ -7,7 +7,6 @@ import java.util.LinkedList;
 
 
 public class GameEngine {
-	static final float defaultSpeed = 1.6f; /* distance de 1.6*0.5 entre le centre de deux ronds */;
 	
 	private int stepCount;
 	public int nbFramePerStep;
@@ -174,7 +173,7 @@ public class GameEngine {
 		// Si il y a un revive, la manche se termine lorsque le score max est atteint
 		if(Rules.current.delayRevive != -1) {
 			for(Player p : players)
-				if(p.getScore() >= Rules.current.scoreLimit)
+				if(p.getScore() >= Rules.current.scoreAim)
 					return true;
 		}
 		// sinon la manche se termine sur les plages de Normandie
@@ -196,7 +195,7 @@ public class GameEngine {
 	 * 'isRoundFinished' retourne vrai **/
 	private boolean isGameFinished() {
 		for(Player p : players)
-			if(p.getScore() >= Rules.current.scoreLimit)
+			if(p.getScore() >= Rules.current.scoreAim)
 				return true;
 		return false;
 	}
@@ -206,7 +205,7 @@ public class GameEngine {
 		ArrayList<Integer> winners = new ArrayList<Integer>();
 		int bestScore = players[0].getScore();
 		for(Player p : players)
-			if(p.getScore() >= Rules.current.scoreLimit) {
+			if(p.getScore() >= Rules.current.scoreAim) {
 				if(p.getScore() == bestScore)
 					winners.add(p.getNumber());
 				else if(p.getScore() > bestScore) {

@@ -12,25 +12,32 @@ public class Rules {
 		
 		/** Carte **/
 		 // nombre de pommes et d'items max présents en même temps sur la carte
-		float nbApplesPerPlayer, nbApples;// total = nbApples + nbPlayer*nbApplesPerPlayer
-		float nbBonusPerPlayer, nbBonus;// total = nbItems + nbPlayer*nbItemsPerPlayer
+		float nbApplesPerPlayer, nbApplesConstant;// total = nbApplesConstant + nbPlayer*nbApplesPerPlayer
+		float nbBonusPerPlayer, nbBonusConstant;// total = nbItemsConstant + nbPlayer*nbItemsPerPlayer
 		//float mapScale; // Echelle de la carte
 	
 		/** Bonus **/
-		float bonusDurationMultiplicator; // multiplicateur de la durée des bonus
+		float bonusEffectDurationFactor; // multiplicateur de la durée des effets des bonus
 		int appleGrowth; // longueur gagnée avec un pomme
+		float trapMinRadius; // Rayon minimum d'un piège
+		float trapMaxRadiusAugmentation; // Rayon supplémentaire max, rayon total = trapMinRadius + random * trapMaxRadiusAugmentation
+		float itemRadius; // Taille des pommes et bonus 
 		
 		/** Vie/mort **/
 		int delayRevive; // temps avant revive; -1 pas de revive et fin du round si moins de 2 joueurs vivants
 		
 		/** Snake **/
-		int initialLength; // longueur initiale des serpents
-		float growthWithLengthFactor; // Taille des snakes en fonction de sa longueur
-		float maxAngleTurn; // Angle de variation maximum du snake pour les déplacements (minimise la courbure des virages)
+		int initialSnakeLength; // longueur initiale des serpents
+		float snakeGrowthWithLengthFactor; // Taille du snake en fonction de sa longueur
+		float maxSnakeAngleTurn; // Angle de variation maximum du snake pour les déplacements (minimise la courbure des virages)
+		float snakeSpeedBonusFactor; // taux de croissance avec le bonus de vitesse
+		float snakeDefaultSpeed;// vitesse par défaut; écart entre rond égale à size*speed
+		float snakeDefaultSize;// vitesse par défaut; écart entre rond égale à size*speed
+		float snakeSizeVariationSpeed; // k : vitesse de variation de taille; newsize = realsize * k + lastsize * (1-k)
 		
 		/** Score **/
 		int scoreKiller, scoreTarget, scoreOther, scoreSuicide; // score obtenu par chacun à chaque kill
-		int scoreLimit; // Score à atteindre pour gagner
+		int scoreAim; // Score à atteindre pour gagner
 		float killScoreFactor, lengthScoreFactor; // score joueur = scoreKill*killScoreFactor + snake.length*lengthScoreFactor
 	}
 	
@@ -58,22 +65,28 @@ public class Rules {
 	private static Values createRules(int mode) {
 		Values r = new Values();
 		
-		r.nbApples = 1;
+		r.nbApplesConstant = 1;
 		r.nbApplesPerPlayer = 0.7f;
-		r.nbBonus = 1;
+		r.nbBonusConstant = 1;
 		r.nbBonusPerPlayer = 0.3f;
 		//r.mapScale = 1.0f;
-		r.bonusDurationMultiplicator = 1.0f;
+		r.bonusEffectDurationFactor = 1.0f;
 		r.appleGrowth = 2;
+		r.trapMinRadius = 1.0f;
+		r.trapMaxRadiusAugmentation = 0.5f;
 		r.delayRevive = -1;
-		r.initialLength = 4;
-		r.growthWithLengthFactor = 1.0f;
-		r.maxAngleTurn = 60;
+		r.initialSnakeLength = 4;
+		r.snakeGrowthWithLengthFactor = 1.0f;
+		r.maxSnakeAngleTurn = 60;
+		r.snakeSpeedBonusFactor = 1.45f;
+		r.snakeDefaultSize = 0.5f;
+		r.snakeDefaultSpeed = 1.6f;
+		r.snakeSizeVariationSpeed = 0.5f;
 		r.scoreKiller = 1;
 		r.scoreOther = 1;
 		r.scoreTarget = 0;
 		r.scoreSuicide = 0;
-		r.scoreLimit = 10;
+		r.scoreAim = 10;
 		r.killScoreFactor = 1;
 		r.lengthScoreFactor = 0;
 		
@@ -82,33 +95,33 @@ public class Rules {
 			r.name = "Death Match";
 			r.scoreOther = 0;
 			r.delayRevive = 10;
-			r.bonusDurationMultiplicator = 1.5f;
+			r.bonusEffectDurationFactor = 1.5f;
 			break;
 		case RULES_OG:
 			r.name = "Overgrowth";
-			r.initialLength = 42;
-			r.nbApples = r.nbApplesPerPlayer = r.nbBonus = r.nbBonusPerPlayer = 0;
+			r.initialSnakeLength = 42;
+			r.nbApplesConstant = r.nbApplesPerPlayer = r.nbBonusConstant = r.nbBonusPerPlayer = 0;
 			break;
 		case RULES_LR:
 			r.name = "Race";
-			r.initialLength = 2;
+			r.initialSnakeLength = 2;
 			r.scoreKiller = 0;
 			r.scoreOther = 0;
 			r.delayRevive = 10;
-			r.bonusDurationMultiplicator = 1.5f;
-			r.scoreLimit = 12; // <=> longueur à atteindre
-			r.growthWithLengthFactor = 1.03f;//~ pow(1.4, 1/12)
+			r.bonusEffectDurationFactor = 1.5f;
+			r.scoreAim = 12; // <=> longueur à atteindre
+			r.snakeGrowthWithLengthFactor = 1.03f;//~ pow(1.4, 1/12)
 			r.killScoreFactor = 0;
 			r.lengthScoreFactor = 1;
 			break;
 		case RULES_CS:
 			r.name = "Suicide";
-			r.initialLength = 2;
+			r.initialSnakeLength = 2;
 			r.scoreKiller = 0;
 			r.scoreOther = 0;
 			r.scoreSuicide = 1;
 			r.delayRevive = 3;
-			r.scoreLimit = 7; // <=> nombre de suicides à faire
+			r.scoreAim = 7; // <=> nombre de suicides à faire
 			//r.maxAngleTurn = 50;
 			r.appleGrowth = 1;
 			break;

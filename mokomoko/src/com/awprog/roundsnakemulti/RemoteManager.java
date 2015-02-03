@@ -26,10 +26,10 @@ public class RemoteManager {
 			public void handleMessage(Message msg) {
 				switch(msg.what) {
 				case ADD_PLAYER:
-					addPlayer(msg.arg1, (String)msg.obj);
+					addPlayerRow(msg.arg1, (String)msg.obj);
 					break;
 				case REMOVE_PLAYER:
-					removePlayer(msg.arg1);
+					removePlayerRow(msg.arg1);
 					break;
 				}
 			}
@@ -64,6 +64,8 @@ public class RemoteManager {
 			msg.obj = name;
 			msg.what = ADD_PLAYER;
 			GUIModifierHandler.sendMessage(msg);
+			
+			padId_list.add(padId);
 		}
 	}
 	
@@ -73,6 +75,8 @@ public class RemoteManager {
 			msg.arg1 = padId;
 			msg.what = REMOVE_PLAYER;
 			GUIModifierHandler.sendMessage(msg);
+			
+			padId_list.remove(padId);
 		}
 	}
 	
@@ -80,7 +84,7 @@ public class RemoteManager {
 		return padId_list.contains(padId);
 	}
 	
-	private void addPlayer(int id, String name) {
+	private void addPlayerRow(int id, String name) {
 		TextView playerName = new TextView(tableLayout.getContext());
 		playerName.setText(name == null ? "Pad "+id : name);
 		
@@ -89,14 +93,10 @@ public class RemoteManager {
 		row.addView(playerName);
 		
 		tableLayout.addView(row);
-		
-		padId_list.add(id);
 	}
 	
-	private void removePlayer(int id) {
+	private void removePlayerRow(int id) {
 		tableLayout.removeView(tableLayout.findViewById(id));
-
-		padId_list.remove(id);
 	}
 	
 	public void clear() {

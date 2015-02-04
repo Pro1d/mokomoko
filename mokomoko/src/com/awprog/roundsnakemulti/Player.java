@@ -20,6 +20,7 @@ public class Player {
 	// Etat vital
 	private boolean isDead;
 	private int deathDate;
+	private int birthDate;
 	// Reference vers les données du jeu
 	final GameEngine gameEngineRef;
 	
@@ -109,13 +110,14 @@ public class Player {
 		equippedItem = null;
 		inUseItem = null;
 		isDead = false;
+		birthDate = GameEngine.getElapsedStep();
 		useEquippedItemRequest = false;
 	}
 	
 	/** Tue le joueur **/
 	public void kill(int murderer) {
 		isDead = true;
-		deathDate = gameEngineRef.getElapsedStep();
+		deathDate = GameEngine.getElapsedStep();
 		
 		equippedItem = null;
 		inUseItem = null;
@@ -125,7 +127,8 @@ public class Player {
 	/** Redonne vie au joueur **/
 	public void revive() {
 		Map map = gameEngineRef.getMap();
-		
+
+		birthDate = GameEngine.getElapsedStep();
 		isDead = false;
 		// TODO get a new position
 		snk.reset(random.nextFloat()*map.width, random.nextFloat()*map.height, padDir);
@@ -133,7 +136,11 @@ public class Player {
 	
 	/** Retourne le temps écoulé depuis la dernière mort **/
 	public int getDeathTime() {
-		return gameEngineRef.getElapsedStep() - deathDate;
+		return GameEngine.getElapsedStep() - deathDate;
+	}
+	/** Retourne le temps écoulé depuis la dernière naissance **/
+	public int getLifeTime() {
+		return GameEngine.getElapsedStep() - birthDate;
 	}
 	
 	/** Indique si le joueur est mort **/
@@ -142,7 +149,7 @@ public class Player {
 	}
 	/** Indique si le joueur est mort pendant le tour actuel **/
 	public boolean isRecentlyDead() {
-		return isDead && gameEngineRef.getElapsedStep() == deathDate;
+		return isDead && GameEngine.getElapsedStep() == deathDate;
 	}
 	
 	/** Avance d'un pas, actionne les items si nécessaire **/

@@ -8,7 +8,7 @@ import java.util.LinkedList;
 
 public class GameEngine {
 	
-	private int stepCount;
+	private static int stepCount;
 	public int nbFramePerStep;
 	public boolean isRoundFinished, isGameFinished;
 	private int roundFinishedDate;
@@ -136,7 +136,7 @@ public class GameEngine {
 	}
 	
 	/** Retourne le nombre de frame écoulé depuis le début de la partie **/
-	public int getElapsedStep() {
+	static public int getElapsedStep() {
 		return stepCount;
 	}
 

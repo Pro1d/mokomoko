@@ -8,12 +8,14 @@ public class Item {
 	private static final Random random = new Random();
 
 	final int itemId;
+	final int createDate;
 	float x, y;
 	float radius = Rules.current.itemRadius;
 	Effects effects;
 	
 	/** Crée un item en le positionnant correctement sur la carte **/
 	private Item(Map map) {
+		createDate = GameEngine.getElapsedStep();
 		if(map != null)
 			setRandomPosition(map);
 		itemId = (nextItemId += random.nextInt(1337));

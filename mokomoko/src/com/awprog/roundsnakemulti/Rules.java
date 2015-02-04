@@ -103,7 +103,7 @@ public class Rules {
 			break;
 		case RULES_OG:
 			r.name = "Overgrowth";
-			r.initialSnakeLength = 42;
+			r.initialSnakeLength = -1;
 			r.nbApplesConstant = r.nbApplesPerPlayer = r.nbBonusConstant = r.nbBonusPerPlayer = 0;
 			break;
 		case RULES_LR:
@@ -126,7 +126,7 @@ public class Rules {
 			r.scoreSuicide = 1;
 			r.delayRevive = 3;
 			r.scoreAim = 7; // <=> nombre de suicides à faire
-			//r.maxAngleTurn = 50;
+			r.maxSnakeAngleTurn = 45;
 			r.appleGrowth = 1;
 			break;
 		}

@@ -142,7 +142,7 @@ public class Map {
 		/// Collision entre joueur
 		for(int i = 0; i < gameEngineRef.getPlayerCount(); i++) {
 			/// Pour varier les priorités, on change à chaque frame
-			Player player = gameEngineRef.getPlayer((i+gameEngineRef.getElapsedStep()) % gameEngineRef.getPlayerCount());
+			Player player = gameEngineRef.getPlayer((i+GameEngine.getElapsedStep()) % gameEngineRef.getPlayerCount());
 			if(player.isDead())
 				continue;
 			Part head = player.getSnake().getHead();

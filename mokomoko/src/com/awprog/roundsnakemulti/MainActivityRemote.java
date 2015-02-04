@@ -10,6 +10,8 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Paint.Align;
@@ -308,16 +310,15 @@ public class MainActivityRemote extends Activity {
 
 		public MySurfaceView(Context context) {
 			super(context);
-			// TODO Auto-generated constructor stub
 			surfaceHolder = getHolder();
-			
-			//initGame(3, 8);
 			
 			paint.setStrokeCap(Paint.Cap.ROUND);
 			paint.setStrokeJoin(Paint.Join.ROUND);
-			paint.setTextAlign(Paint.Align.CENTER);
+			
+			FunnyFilter.clearFilter();
 		}
 
+		private float downX, downY;
 		@SuppressLint("ClickableViewAccessibility")
 		@Override
 		public boolean onTouchEvent(MotionEvent event)
@@ -355,6 +356,18 @@ public class MainActivityRemote extends Activity {
 					}
 				}
 			}*/
+			if(event.getAction() == MotionEvent.ACTION_DOWN) {
+				downX = event.getX();
+				downY = event.getY();
+			} else if(event.getAction()== MotionEvent.ACTION_UP) {
+				float dx = event.getX() - downX, dy = event.getY() - downY;
+				if(Math.abs(dx+dy) <= 50)
+					showMenu();
+				else if(dx < 50)
+					FunnyFilter.previousFilter();
+				else if(dx > 50)
+					FunnyFilter.nextFilter();
+			}
 			
 			return true;
 		}
@@ -380,6 +393,8 @@ public class MainActivityRemote extends Activity {
 		@Override
 		public void run() {
 			int frameCount = 0;
+			Bitmap bitmap = null;
+			
 			while(running) {
 				long t = SystemClock.elapsedRealtime();
 				frameCount++;
@@ -412,7 +427,7 @@ public class MainActivityRemote extends Activity {
 					if(!isMenuOpened() && frameCount % game.nbFramePerStep == 0) {
 						game.step();
 						for(DeathCertificate dt : game.getDeathCertificates()) {
-							if(dt.date == game.getElapsedStep()) {
+							if(dt.date == GameEngine.getElapsedStep()) {
 								int padid = remoteRegistration.getPadId(dt.dead);
 								Log.i("###", "Send to "+padid);
 								try {
@@ -427,8 +442,11 @@ public class MainActivityRemote extends Activity {
 					
 					// graphic engine
 					if(surfaceHolder.getSurface().isValid()){
-						Canvas canvas = surfaceHolder.lockCanvas();
-
+						Canvas cvs = surfaceHolder.lockCanvas();
+						if(bitmap == null || bitmap.getWidth() != cvs.getWidth() || bitmap.getHeight() != cvs.getHeight())
+							bitmap = Bitmap.createBitmap(cvs.getWidth(), cvs.getHeight(), Config.ARGB_8888);
+						Canvas canvas = new Canvas(bitmap);
+						
 						final int w = canvas.getWidth();
 						final int h = canvas.getHeight();
 						final int scoreWidth = h / 3;
@@ -524,15 +542,16 @@ public class MainActivityRemote extends Activity {
 						
 						canvas.restore();
 
-						
-						//Log.i("###", "draw="+(SystemClock.elapsedRealtime() - t));
-						surfaceHolder.unlockCanvasAndPost(canvas);
+						Log.i("###", "draw="+(SystemClock.elapsedRealtime() - t));
+						FunnyFilter.applyCurrentFilter(bitmap);
+						cvs.drawBitmap(bitmap, 0, 0, null);
+						surfaceHolder.unlockCanvasAndPost(cvs);
 					}
 					
 				} // Fin synchronized(game)
 			
 				try {
-					Thread.sleep(Math.max(0, GameRenderer.DELAY_DRAW - (SystemClock.elapsedRealtime() - t)));
+					Thread.sleep(Math.max(1, GameRenderer.DELAY_DRAW - (SystemClock.elapsedRealtime() - t)));
 				} catch (InterruptedException e) {}
 			}// Fin while(running)
 		}

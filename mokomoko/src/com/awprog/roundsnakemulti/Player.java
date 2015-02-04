@@ -130,8 +130,16 @@ public class Player {
 
 		birthDate = GameEngine.getElapsedStep();
 		isDead = false;
-		// TODO get a new position
-		snk.reset(random.nextFloat()*map.width, random.nextFloat()*map.height, padDir);
+		
+		// Recherche d'une position non occupée par un item
+		// TODO position non occupée par un autre snake
+		int iterMax = 10;
+		float x,y;
+		do {
+			x = random.nextFloat() * (map.width - Rules.current.snakeDefaultSize*2)  + Rules.current.snakeDefaultSize;
+			y = random.nextFloat() * (map.height - Rules.current.snakeDefaultSize*2) + Rules.current.snakeDefaultSize;
+		} while(map.collisionCircleItems(x,y,Rules.current.snakeDefaultSize) && --iterMax > 0);
+		snk.reset(x, y, padDir);
 	}
 	
 	/** Retourne le temps écoulé depuis la dernière mort **/

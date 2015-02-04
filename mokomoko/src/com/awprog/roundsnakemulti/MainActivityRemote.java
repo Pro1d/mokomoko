@@ -50,7 +50,7 @@ public class MainActivityRemote extends Activity {
 	MySurfaceView mySurfaceView;
 	SeekBar sbSpeed;
 	GameEngine game = new GameEngine();
-	GameRenderer renderer = new GameRenderer();
+	GameRenderer renderer = new GameRenderer(game);
 	GameMessageReceiver gameMsgReceiver = new GameMessageReceiver();
 	StringSender gameMsgSender;
 	RemoteManager remoteRegistration;
@@ -392,12 +392,11 @@ public class MainActivityRemote extends Activity {
 
 		@Override
 		public void run() {
-			int frameCount = 0;
 			Bitmap bitmap = null;
 			
 			while(running) {
 				long t = SystemClock.elapsedRealtime();
-				frameCount++;
+				renderer.frameCount++;
 				
 				synchronized (game) {
 					/// Evenements pad
@@ -424,7 +423,7 @@ public class MainActivityRemote extends Activity {
 					}
 					
 					// Game engine
-					if(!isMenuOpened() && frameCount % game.nbFramePerStep == 0) {
+					if(!isMenuOpened() && renderer.frameCount % game.nbFramePerStep == 0) {
 						game.step();
 						for(DeathCertificate dt : game.getDeathCertificates()) {
 							if(dt.date == GameEngine.getElapsedStep()) {
@@ -432,7 +431,7 @@ public class MainActivityRemote extends Activity {
 								Log.i("###", "Send to "+padid);
 								try {
 									gameMsgSender.send(OutputEvent.createFeedback(0, padid).toJSON().toString());
-								} catch (JSONException e) {
+								} catch (Exception e) {
 									// TODO Auto-generated catch block
 									e.printStackTrace();
 								}
@@ -466,7 +465,7 @@ public class MainActivityRemote extends Activity {
 						canvas.clipRect(0, 0, (w-scoreWidth), h);
 						canvas.scale(scale, scale);
 						
-						renderer.render(canvas, game, frameCount);
+						renderer.render(canvas);
 						
 						canvas.restore();
 						

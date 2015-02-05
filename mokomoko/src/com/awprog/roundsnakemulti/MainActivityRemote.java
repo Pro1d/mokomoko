@@ -428,11 +428,12 @@ public class MainActivityRemote extends Activity {
 						for(DeathCertificate dt : game.getDeathCertificates()) {
 							if(dt.date == GameEngine.getElapsedStep()) {
 								int padid = remoteRegistration.getPadId(dt.dead);
+								if(padid == -1)
+									continue;
 								Log.i("###", "Send to "+padid);
 								try {
-									gameMsgSender.send(OutputEvent.createFeedback(0, padid).toJSON().toString());
+									gameMsgSender.send("{\"type\":\"outputevent\", \"event\":"+OutputEvent.createFeedback(0, padid).toJSON().toString()+"}");
 								} catch (Exception e) {
-									// TODO Auto-generated catch block
 									e.printStackTrace();
 								}
 							}

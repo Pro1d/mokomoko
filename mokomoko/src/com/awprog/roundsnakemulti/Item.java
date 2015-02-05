@@ -60,16 +60,17 @@ public class Item {
 	/// Effets de l'item 
 	public static class Effects {
 		/** Graphical appearance **/
-		enum Appearance { APPLE, BONUS, OBSTACLE };
+		enum Appearance { APPLE, BONUS, OBSTACLE, ABSTRACT};
 		
 		final Appearance appearance;
-		boolean fatalTrap = false; // piège mortelle
+		boolean fatalTrap = false; // piège mortel
 		int snakeGrowth = 0; // gain en taille
 		float snakeRadiusMultiplicator = 1.0f; // changement de taille
 		int duration = 0, maxDuration = 0; // durée effective/totale, en step; maxDuration  = 0 => utilisation instantanée, sinon utilisation sur une période
 		boolean sharpTeeth = false; // dents tranchantes
 		boolean manualActivation = false; // activation par le joueur, sinon automatique au contact
 		int player = -1; // Joueur ayant créé cet item, -1 si créé par le jeu
+		//boolean cancelable = true; // peut être annulé par l'utilisateir en ativant un autre effet
 		
 		private Effects(Appearance a) {
 			appearance = a;
@@ -105,5 +106,11 @@ public class Item {
 			e.fatalTrap = true;
 			return e;
 		}
+		/*static Effects getCooldownEffects(int duration) {
+			Effects e = new Effects(Appearance.ABSTRACT);
+			e.cancelable = false;
+			e.maxDuration = duration;
+			return e;
+		}*/
 	}
 }

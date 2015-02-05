@@ -49,16 +49,24 @@ public class GameRenderer {
 				
 				canvas.save();
 				canvas.translate(pos[0], pos[1]);
+				canvas.scale(part.radius, part.radius);
 				
-				float scale = isHead ? getSnakeAppearanceValue(player) : 1;
-				canvas.scale(part.radius*(1 + 4 * (1 - scale*scale)), part.radius*(1 + 4 * (1 - scale*scale)));
-				float alpha = (55 + getSnakeDeathValue(player) * 200) / 255 * (scale * scale);
+				// Transparence décès
+				float alpha = (55 + getSnakeDeathValue(player) * 200) / 255;
+				
 				paint.setAlpha((int) (255*alpha));
-				
 				canvas.drawCircle(0, 0, 1, paint);
 				
 				/// Dessin de la tête
 				if(isHead) {
+					// Revive
+					canvas.save(); 
+					float scale = getSnakeAppearanceValue(player);
+					paint.setAlpha((int) (255*alpha* (scale * scale) * 0.75f));
+					canvas.scale((1 + 4 * (1 - scale*scale)), (1 + 4 * (1 - scale*scale)));
+					canvas.drawCircle(0, 0, 1, paint);
+					canvas.restore();
+					
 					/// Assombrissement de la tête
 					paint.setColor(0);
 					paint.setAlpha((int) (64*alpha));

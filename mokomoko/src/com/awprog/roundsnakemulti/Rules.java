@@ -114,7 +114,7 @@ public class Rules {
 			r.delayRevive = 10;
 			r.bonusEffectDurationFactor = 1.5f;
 			r.scoreAim = 12; // <=> longueur à atteindre
-			r.snakeGrowthWithLengthFactor = 1.03f;//~ pow(1.4, 1/12)
+			r.snakeGrowthWithLengthFactor = 1.015f;//~ pow(1.4, 1/12)
 			r.killScoreFactor = 0;
 			r.lengthScoreFactor = 1;
 			break;

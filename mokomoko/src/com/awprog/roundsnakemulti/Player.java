@@ -170,7 +170,7 @@ public class Player {
 		else {
 			snk.step(padDir, map, number);
 			
-			if(useEquippedItemRequest && hasEquippedItem()) {
+			if(useEquippedItemRequest && hasEquippedItem()/* && (inUseItem == null || inUseItem.cancelable)*/) {
 				// Effet sur une période, interruption de l'effet en cours
 				if(equippedItem.maxDuration > 0) {
 					finishCurrenEffects();
@@ -216,9 +216,9 @@ public class Player {
 		return inUseItem;
 	}
 	
-	/** Demande l'utilisation de l'item équipé **/
+	/** Demande l'utilisation de l'item équipé (appliqué seulement si possible) **/
 	public void sendUseItemRequest() {
-		if(hasEquippedItem() && !isDead)
+		if(hasEquippedItem() && !isDead/* && (inUseItem == null || inUseItem.cancelable)*/)
 			useEquippedItemRequest = true;
 	}
 
@@ -294,7 +294,7 @@ public class Player {
 	
 	/** Indique si le joueur peut ramasser l'item donné **/
 	public boolean canCollect(Item item) {
-		return !(item.effects.manualActivation && hasEquippedItem()) && !isDead;
+		return !(item.effects.manualActivation && hasEquippedItem()) && !isDead/* && (inUseItem == null || inUseItem.cancelable)*/;
 	}
 	
 	/** Ramasse et applique les effets de l'item **/

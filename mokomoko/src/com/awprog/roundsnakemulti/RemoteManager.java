@@ -9,6 +9,7 @@ import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
+@Deprecated
 public class RemoteManager {
 	private HashSet<Integer> padId_list = new HashSet<Integer>();
 	private TableLayout tableLayout;

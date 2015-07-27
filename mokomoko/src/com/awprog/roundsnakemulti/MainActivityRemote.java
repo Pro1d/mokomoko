@@ -1,15 +1,10 @@
 package com.awprog.roundsnakemulti;
 
-import java.net.Socket;
 import java.util.ArrayList;
-
-import org.json.JSONException;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
@@ -18,6 +13,7 @@ import android.graphics.Paint.Align;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
+import android.util.SparseIntArray;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -31,30 +27,27 @@ import android.widget.LinearLayout;
 import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.RelativeLayout;
-import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
-import android.widget.TableLayout;
 
 import com.awprog.roundsnakemulti.GameEngine.DeathCertificate;
-import com.fbessou.sofa.GameMessageReceiver;
+import com.fbessou.sofa.GameIOHandler;
+import com.fbessou.sofa.GameIOHandler.GamePadInputEvent;
+import com.fbessou.sofa.GameIOHandler.GamePadStateChangedEvent;
+import com.fbessou.sofa.GameIOHandler.GamePadStateChangedEvent.Type;
+import com.fbessou.sofa.GameInformation;
 import com.fbessou.sofa.InputEvent;
-import com.fbessou.sofa.InputEvent.InputEventType;
 import com.fbessou.sofa.OutputEvent;
-import com.fbessou.sofa.ProxyConnector;
-import com.fbessou.sofa.ProxyConnector.OnConnectedListener;
-import com.fbessou.sofa.StringReceiver;
-import com.fbessou.sofa.StringSender;
 
 public class MainActivityRemote extends Activity {
 	MySurfaceView mySurfaceView;
 	SeekBar sbSpeed;
 	GameEngine game = new GameEngine();
 	GameRenderer renderer = new GameRenderer(game);
-	GameMessageReceiver gameMsgReceiver = new GameMessageReceiver();
-	StringSender gameMsgSender;
-	RemoteManager remoteRegistration;
-	boolean registrationPhase = false;
+	GameIOHandler easyIO;
+
+	ArrayList<Integer> gamepadInGame_IndexToId = new ArrayList<Integer>();
+	SparseIntArray gamepadInGame_IdToIndex = new SparseIntArray();
 	
 	/**
 	 * TODO player/pad manager
@@ -71,8 +64,27 @@ public class MainActivityRemote extends Activity {
 		
 		((RelativeLayout) findViewById(R.id.rl_main)).addView(mySurfaceView, 0);
 		buildMenu();
+		easyIO = new GameIOHandler();
+		GameInformation info = new GameInformation("Mokomoko");
+		easyIO.start(this, info);
+		/*ProxyConnector pc = new ProxyConnector(this, 6969, new OnConnectedListener() {
+			@Override
+			public void onConnected(Socket socket) {
+				if(socket == null) {
+					Log.e("###", "OnConnect : socket = null");
+					return;
+				}
+				StringReceiver sr = new StringReceiver(socket);
+				sr.setListener(gameMsgReceiver);
+				sr.start();
+				
+				gameMsgSender = new StringSender(socket);
+				gameMsgSender.start();
+			}
+		});
+		pc.connect();*/
 	}
-	
+	/*
 	private AlertDialog buildPadRegistrationDialog() {
 		TableLayout tableView = new TableLayout(this);
 		remoteRegistration = new RemoteManager(tableView);
@@ -101,7 +113,7 @@ public class MainActivityRemote extends Activity {
 		});
 		
 		return adb.create();
-	}
+	}*/
 	private void buildMenu() {
 		final LinearLayout ll = (LinearLayout) findViewById(R.id.ll_main);
 		
@@ -139,14 +151,14 @@ public class MainActivityRemote extends Activity {
 				((Button)findViewById(R.id.b_play)).setText("Play");
 				//((Button)findViewById(R.id.b_reset)).setEnabled(false);
 			}});
-		/// Pad registration
+		/*// Pad registration
 		final AlertDialog adRegistration = buildPadRegistrationDialog();
 		((Button)ll.findViewById(R.id.b_register_player)).setOnClickListener(new OnClickListener() {
 			@Override public void onClick(View v) {
 				remoteRegistration.clear();
 				registrationPhase = true;
 				adRegistration.show();
-			}});
+			}});*/
 		/// Game mode
 		((RadioGroup) findViewById(R.id.rg_mode)).setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			@Override public void onCheckedChanged(RadioGroup group, int checkedId) {
@@ -232,6 +244,17 @@ public class MainActivityRemote extends Activity {
 		return ((View) findViewById(R.id.sv_main)).getVisibility() == View.VISIBLE;
 	}
 	
+	public void updateGamePadInGame() {
+		gamepadInGame_IndexToId.clear();
+		gamepadInGame_IdToIndex.clear();
+		for(int i = easyIO.getGamePadCount(); --i >= 0; ) {
+			gamepadInGame_IndexToId.add(easyIO.getGamePadInformation(i).gamePadId);
+			gamepadInGame_IdToIndex.put(easyIO.getGamePadInformation(i).gamePadId, gamepadInGame_IndexToId.size()-1);
+		}
+		game.setPlayerCount(Math.min(gamepadInGame_IndexToId.size(), 42));
+		game.reset();
+	}
+	
 	@SuppressLint("NewApi")
 	@Override
 	public void onWindowFocusChanged(boolean hasFocus) {
@@ -253,38 +276,6 @@ public class MainActivityRemote extends Activity {
 		} else {
 			showMenu();
 		}
-	}
-	
-	@Override
-	protected void onStart() {
-		super.onStart();
-		ProxyConnector pc = new ProxyConnector(this, 6969, new OnConnectedListener() {
-			@Override
-			public void onConnected(Socket socket) {
-				if(socket == null) {
-					Log.e("###", "OnConnect : socket = null");
-					return;
-				}
-				StringReceiver sr = new StringReceiver(socket);
-				sr.setListener(gameMsgReceiver);
-				sr.start();
-				
-				gameMsgSender = new StringSender(socket);
-				gameMsgSender.start();
-			}
-		});
-		pc.connect();
-	}
-	@Override
-	protected void onStop() {
-		/*if(!strRcvThread.isInterrupted())
-			strRcvThread.interrupt();
-		try {
-			strRcvThread.join();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}*/
-		super.onStop();
 	}
 	
 	@Override
@@ -399,25 +390,31 @@ public class MainActivityRemote extends Activity {
 				renderer.frameCount++;
 				
 				synchronized (game) {
-					/// Evenements pad
-					InputEvent event;
-					while((event = gameMsgReceiver.pollInputEvent()) != null) {
-						if(registrationPhase) {
-							remoteRegistration.registerPad(event.padId, null);
-						} else {
-							int playerNumber = remoteRegistration.getPlayer(event.padId);
-							if(0 <= playerNumber && playerNumber < game.getPlayerCount()) {
-								switch(event.eventType) {
-								case MOTION_2D:
-									game.handleJoystickEvent(playerNumber, event.x, -event.y);
-									break;
-								case KEY_DOWN:
-								case KEY_UP:
-									game.handleButtonEvent(playerNumber, event.eventType == InputEventType.KEY_DOWN);
-									break;
-								default:
-									break;
-								}
+					GamePadStateChangedEvent scEvent;
+					while((scEvent = easyIO.pollStateChangedEvent()) != null) {
+						if(!game.hasBegun() || game.isGameFinished) {
+							if(scEvent.eventType == Type.JOINED)
+								updateGamePadInGame();
+						}
+					}
+						/*TODO: Do something with these events*/;
+					
+					GamePadInputEvent iEvent;
+					while((iEvent = easyIO.pollInputEvent()) != null) {
+						int playerNumber = gamepadInGame_IdToIndex.get(iEvent.gamePadId);
+						if(0 <= playerNumber && playerNumber < game.getPlayerCount()) {
+							InputEvent e = iEvent.event;
+							switch(e.eventType) {
+							case FLOATMOVE:
+								if(e.values.length == 2)
+									game.handleJoystickEvent(playerNumber, e.getX(), -e.getY());
+								break;
+							case KEYDOWN:
+							case KEYUP:
+								game.handleButtonEvent(playerNumber, e.eventType == InputEvent.Type.KEYDOWN);
+								break;
+							default:
+								break;
 							}
 						}
 					}
@@ -427,15 +424,11 @@ public class MainActivityRemote extends Activity {
 						game.step();
 						for(DeathCertificate dt : game.getDeathCertificates()) {
 							if(dt.date == GameEngine.getElapsedStep()) {
-								int padid = remoteRegistration.getPadId(dt.dead);
+								int padid = gamepadInGame_IndexToId.get(dt.dead);
 								if(padid == -1)
 									continue;
-								Log.i("###", "Send to "+padid);
-								try {
-									gameMsgSender.send("{\"type\":\"outputevent\", \"event\":"+OutputEvent.createFeedback(0, padid).toJSON().toString()+"}");
-								} catch (Exception e) {
-									e.printStackTrace();
-								}
+								Log.i("###", "Send death feedback to "+padid);
+								easyIO.sendOutputEvent(OutputEvent.createFeedback(OutputEvent.VIBRATE_SHORT, 42337), padid);
 							}
 						}
 					}
@@ -542,7 +535,7 @@ public class MainActivityRemote extends Activity {
 						
 						canvas.restore();
 
-						Log.i("###", "draw="+(SystemClock.elapsedRealtime() - t));
+						//Log.i("###", "draw="+(SystemClock.elapsedRealtime() - t));
 						FunnyFilter.applyCurrentFilter(bitmap);
 						cvs.drawBitmap(bitmap, 0, 0, null);
 						surfaceHolder.unlockCanvasAndPost(cvs);

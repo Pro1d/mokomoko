@@ -311,9 +311,9 @@ public class MainActivity extends Activity {
 					while((event = gameMsgReceiver.pollInputEvent()) != null) {
 						if(game != null && game.players != null && event.padId < game.nbPlayers) {
 							switch(event.eventType) {
-							case MOTION_2D:
-								float dx = event.x;
-								float dy = -event.y;
+							case FLOATMOVE:
+								float dx = (float) event.values[0];
+								float dy = (float) -event.values[1];
 								game.players[event.padId].setDir((float) Math.atan2(dy, dx));
 								break;
 							default:

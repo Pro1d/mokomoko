@@ -1,6 +1,7 @@
 package com.awprog.roundsnakemulti;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -32,6 +33,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 
 import com.awprog.roundsnakemulti.GameEngine.DeathCertificate;
 import com.fbessou.sofa.GameIOHandler;
+import com.fbessou.sofa.GameIOHandler.GamePadInGameInformation;
 import com.fbessou.sofa.GameIOHandler.GamePadInputEvent;
 import com.fbessou.sofa.GameIOHandler.GamePadStateChangedEvent;
 import com.fbessou.sofa.GameIOHandler.GamePadStateChangedEvent.Type;
@@ -245,14 +247,24 @@ public class MainActivityRemote extends Activity {
 	}
 	
 	public void updateGamePadInGame() {
+		HashMap<String, Integer> names = new HashMap<String, Integer>();
+		game.setPlayerCount(easyIO.getGamePadCount());
+		game.reset();
 		gamepadInGame_IndexToId.clear();
 		gamepadInGame_IdToIndex.clear();
 		for(int i = easyIO.getGamePadCount(); --i >= 0; ) {
-			gamepadInGame_IndexToId.add(easyIO.getGamePadInformation(i).gamePadId);
-			gamepadInGame_IdToIndex.put(easyIO.getGamePadInformation(i).gamePadId, gamepadInGame_IndexToId.size()-1);
+			GamePadInGameInformation info = easyIO.getGamePadInformation(i);
+			gamepadInGame_IndexToId.add(info.gamePadId);
+			gamepadInGame_IdToIndex.put(info.gamePadId, gamepadInGame_IndexToId.size()-1);
+			String name = info.staticInformations.getNickname();
+			if(!names.containsKey(name)) {
+				names.put(name, 1);
+				game.getPlayer(gamepadInGame_IndexToId.size()-1).setName(name);
+			} else {
+				names.put(name, names.get(name)+1);
+				game.getPlayer(gamepadInGame_IndexToId.size()-1).setName(name+" ("+names.get(name)+")");
+			}
 		}
-		game.setPlayerCount(Math.min(gamepadInGame_IndexToId.size(), 42));
-		game.reset();
 	}
 	
 	@SuppressLint("NewApi")
@@ -393,11 +405,9 @@ public class MainActivityRemote extends Activity {
 					GamePadStateChangedEvent scEvent;
 					while((scEvent = easyIO.pollStateChangedEvent()) != null) {
 						if(!game.hasBegun() || game.isGameFinished) {
-							if(scEvent.eventType == Type.JOINED)
-								updateGamePadInGame();
+							updateGamePadInGame();
 						}
 					}
-						/*TODO: Do something with these events*/;
 					
 					GamePadInputEvent iEvent;
 					while((iEvent = easyIO.pollInputEvent()) != null) {

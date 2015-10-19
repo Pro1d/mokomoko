@@ -32,21 +32,23 @@ import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 
 import com.awprog.roundsnakemulti.GameEngine.DeathCertificate;
-import com.fbessou.sofa.GameIOHandler;
-import com.fbessou.sofa.GameIOHandler.GamePadInGameInformation;
-import com.fbessou.sofa.GameIOHandler.GamePadInputEvent;
-import com.fbessou.sofa.GameIOHandler.GamePadStateChangedEvent;
-import com.fbessou.sofa.GameIOHandler.GamePadStateChangedEvent.Type;
+import com.fbessou.sofa.GameIOClient.ConnectionStateChangedListener;
+import com.fbessou.sofa.GameIOHelper;
+import com.fbessou.sofa.GameIOHelper.GamePadInGameInformation;
+import com.fbessou.sofa.GameIOHelper.GamePadInputEvent;
+import com.fbessou.sofa.GameIOHelper.GamePadStateChangedEvent;
+import com.fbessou.sofa.GameIOHelper.GamePadStateChangedEvent.Type;
+import com.fbessou.sofa.indicator.Indicator;
 import com.fbessou.sofa.GameInformation;
 import com.fbessou.sofa.InputEvent;
 import com.fbessou.sofa.OutputEvent;
 
-public class MainActivityRemote extends Activity {
+public class MainActivityRemote extends Activity implements ConnectionStateChangedListener {
 	MySurfaceView mySurfaceView;
 	SeekBar sbSpeed;
 	GameEngine game = new GameEngine();
 	GameRenderer renderer = new GameRenderer(game);
-	GameIOHandler easyIO;
+	GameIOHelper easyIO;
 
 	ArrayList<Integer> gamepadInGame_IndexToId = new ArrayList<Integer>();
 	SparseIntArray gamepadInGame_IdToIndex = new SparseIntArray();
@@ -66,25 +68,9 @@ public class MainActivityRemote extends Activity {
 		
 		((RelativeLayout) findViewById(R.id.rl_main)).addView(mySurfaceView, 0);
 		buildMenu();
-		easyIO = new GameIOHandler();
 		GameInformation info = new GameInformation("Mokomoko");
-		easyIO.start(this, info);
-		/*ProxyConnector pc = new ProxyConnector(this, 6969, new OnConnectedListener() {
-			@Override
-			public void onConnected(Socket socket) {
-				if(socket == null) {
-					Log.e("###", "OnConnect : socket = null");
-					return;
-				}
-				StringReceiver sr = new StringReceiver(socket);
-				sr.setListener(gameMsgReceiver);
-				sr.start();
-				
-				gameMsgSender = new StringSender(socket);
-				gameMsgSender.start();
-			}
-		});
-		pc.connect();*/
+		easyIO = new GameIOHelper(this, info);
+		easyIO.start(this);
 	}
 	/*
 	private AlertDialog buildPadRegistrationDialog() {
@@ -135,7 +121,8 @@ public class MainActivityRemote extends Activity {
 			@Override public void onClick(View v) {
 				((Button)findViewById(R.id.b_play)).setText("Play");
 				//((Button)findViewById(R.id.b_reset)).setEnabled(false);
-				game.reset();
+				updateGamePadInGame(); // TODO remove that bad hack
+				//game.reset();		   // TODO remove that bad hack
 			}
 		});
 		/// Nb players
@@ -252,10 +239,12 @@ public class MainActivityRemote extends Activity {
 		game.reset();
 		gamepadInGame_IndexToId.clear();
 		gamepadInGame_IdToIndex.clear();
-		for(int i = easyIO.getGamePadCount(); --i >= 0; ) {
-			GamePadInGameInformation info = easyIO.getGamePadInformation(i);
-			gamepadInGame_IndexToId.add(info.gamePadId);
-			gamepadInGame_IdToIndex.put(info.gamePadId, gamepadInGame_IndexToId.size()-1);
+
+		for(int id : easyIO.getGamePadIds()) {
+			GamePadInGameInformation info = easyIO.getGamePadInformation(id);
+			gamepadInGame_IndexToId.add(id);
+			gamepadInGame_IdToIndex.put(id, gamepadInGame_IndexToId.size()-1);
+
 			String name = info.staticInformations.getNickname();
 			if(!names.containsKey(name)) {
 				names.put(name, 1);
@@ -402,16 +391,30 @@ public class MainActivityRemote extends Activity {
 				renderer.frameCount++;
 				
 				synchronized (game) {
+					easyIO.flushCustomMessage();
+					
 					GamePadStateChangedEvent scEvent;
 					while((scEvent = easyIO.pollStateChangedEvent()) != null) {
+						
 						if(!game.hasBegun() || game.isGameFinished) {
 							updateGamePadInGame();
+						} else {
+							if(scEvent.eventType == Type.UNEXPECTEDLY_DISCONNECTED) {
+								// TODO handle this case
+							}
+							// Mise à jour du Nickname
+							else if(scEvent.eventType == Type.INFORMATION) {
+								int playerNumber = gamepadInGame_IdToIndex.get(scEvent.gamePadId, -1);
+								if(0 <= playerNumber && playerNumber < game.getPlayerCount()) {
+									game.getPlayer(playerNumber).setName(scEvent.newInformation.getNickname());
+								}
+							}
 						}
 					}
 					
 					GamePadInputEvent iEvent;
 					while((iEvent = easyIO.pollInputEvent()) != null) {
-						int playerNumber = gamepadInGame_IdToIndex.get(iEvent.gamePadId);
+						int playerNumber = gamepadInGame_IdToIndex.get(iEvent.gamePadId, -1);
 						if(0 <= playerNumber && playerNumber < game.getPlayerCount()) {
 							InputEvent e = iEvent.event;
 							switch(e.eventType) {
@@ -438,7 +441,7 @@ public class MainActivityRemote extends Activity {
 								if(padid == -1)
 									continue;
 								Log.i("###", "Send death feedback to "+padid);
-								easyIO.sendOutputEvent(OutputEvent.createFeedback(OutputEvent.VIBRATE_SHORT, 42337), padid);
+								easyIO.sendOutputEvent(OutputEvent.createFeedback(OutputEvent.VIBRATE_LONG, Indicator.FEEDBACK_CATEGORY_VALUE+1), padid);
 							}
 						}
 					}
@@ -558,5 +561,16 @@ public class MainActivityRemote extends Activity {
 				} catch (InterruptedException e) {}
 			}// Fin while(running)
 		}
+	}
+
+	@Override
+	public void onConnected() {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void onDisconnected() {
+		// TODO Auto-generated method stub
+		
 	}
 }

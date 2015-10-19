@@ -28,8 +28,6 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 
 import com.awprog.roundsnakemulti.Game.Map;
 import com.awprog.roundsnakemulti.Game.Player;
-import com.fbessou.sofa.GameMessageReceiver;
-import com.fbessou.sofa.InputEvent;
 import com.fbessou.sofa.ProxyConnector;
 import com.fbessou.sofa.ProxyConnector.OnConnectedListener;
 import com.fbessou.sofa.StringReceiver;
@@ -38,7 +36,7 @@ public class MainActivity extends Activity {
 		MySurfaceView mySurfaceView;
 		SeekBar sbSpeed;
 		Game game = new Game();
-		GameMessageReceiver gameMsgReceiver = new GameMessageReceiver();
+		//GameMessageReceiver gameMsgReceiver = new GameMessageReceiver();
 		
 		/**
 		 * TODO :
@@ -186,7 +184,7 @@ public class MainActivity extends Activity {
 							}
 						}
 					});*/
-					sr.setListener(gameMsgReceiver);
+					//sr.setListener(gameMsgReceiver);
 					new Thread(sr).start();
 				}
 			});
@@ -307,7 +305,7 @@ public class MainActivity extends Activity {
 					if(!game.isGameInit)
 						game.initGame();
 					
-					InputEvent event;
+					/*InputEvent event;
 					while((event = gameMsgReceiver.pollInputEvent()) != null) {
 						if(game != null && game.players != null && event.padId < game.nbPlayers) {
 							switch(event.eventType) {
@@ -320,7 +318,7 @@ public class MainActivity extends Activity {
 								break;
 							}
 						}
-					}
+					}*/
 					
 					// Game engine
 					if(!game.pause) {

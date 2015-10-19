@@ -2,5 +2,6 @@
 <resources>
 
     <string name="app_name">Mokomoko</string>
+    <string name="app_game_pad_name">Mokomoko Game-pad</string>
     
 </resources>

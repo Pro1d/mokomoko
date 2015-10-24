@@ -68,7 +68,8 @@ public class MainActivityRemote extends Activity implements ConnectionStateChang
 		
 		((RelativeLayout) findViewById(R.id.rl_main)).addView(mySurfaceView, 0);
 		buildMenu();
-		GameInformation info = new GameInformation("Mokomoko");
+		GameInformation info = new GameInformation(this);
+		info.setName("Mokomoko");
 		easyIO = new GameIOHelper(this, info);
 		easyIO.start(this);
 	}

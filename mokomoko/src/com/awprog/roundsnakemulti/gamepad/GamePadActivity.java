@@ -1,14 +1,9 @@
 package com.awprog.roundsnakemulti.gamepad;
 
-import java.util.Random;
-import java.util.UUID;
-
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -37,7 +32,7 @@ public class GamePadActivity extends Activity implements ConnectionStateChangedL
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.gamepad_layout);
 		
-		infos = new GamePadInformation(getNameFromPreferences(), getUUIDFromPreferences());
+		infos = new GamePadInformation(this);
 		easyIO = new GamePadIOHelper(this, infos);
 		easyIO.start(this);
 
@@ -49,37 +44,6 @@ public class GamePadActivity extends Activity implements ConnectionStateChangedL
 		onDisconnectedFromProxy();
 	}
 	
-	private UUID getUUIDFromPreferences() {
-		SharedPreferences prefs = getSharedPreferences("UUID", Context.MODE_PRIVATE);
-		String s = prefs.getString("UUID", null);
-		try {
-			return UUID.fromString(s);
-		} catch(Exception e) {
-			// UUID not found in prefs
-			UUID uuid = UUID.randomUUID();
-			prefs.edit().putString("UUID", uuid.toString()).commit();
-			return uuid;
-		}
-	}
-	private String getNameFromPreferences() {
-		SharedPreferences prefs = getSharedPreferences("user", Context.MODE_PRIVATE);
-		String s = prefs.getString("name", null);
-		if(s != null)
-			return s;
-		else {
-			// user name not found in prefs, select one randomly
-			Random rand = new Random();
-			String sampleName[] = {"Jojo", "Dyh", "Brian", "Moggs", "Lumbys", "Skrex", "Xazz", "Gloovas", "Toll", "Vahn"};
-			s = sampleName[rand.nextInt(sampleName.length)];
-			prefs.edit().putString("name", s).commit();
-			return s;
-		}
-	}
-	private void saveNameInPreferences(String name) {
-		SharedPreferences prefs = getSharedPreferences("user", Context.MODE_PRIVATE);
-		prefs.edit().putString("name", name).commit();
-	}
-
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Add an option to change the user's nickname in the menu
@@ -105,7 +69,6 @@ public class GamePadActivity extends Activity implements ConnectionStateChangedL
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
 				infos.setNickname(edit.getText().toString());
-				saveNameInPreferences(infos.getNickname());
 				easyIO.updateInformation(infos);
 			}
 		});
